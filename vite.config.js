@@ -3,6 +3,7 @@ import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
+  
   server: {
     port: 3000,
     proxy: {
@@ -12,8 +13,11 @@ export default defineConfig({
       },
     },
   },
+
   build: {
-    outDir: 'dist',
+    outDir: '../backend/public/build',
+    emptyOutDir: true,
+
     rollupOptions: {
       output: {
         manualChunks: {
@@ -24,6 +28,6 @@ export default defineConfig({
       },
     },
   },
-  // Pastikan base URL benar untuk deployment
+
   base: '/',
 })
