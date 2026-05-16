@@ -16,7 +16,7 @@ const bulkDeletePengaduan = (ids) => api.post('/v1/super-admin/pengaduan/bulk-de
 
 const BACKEND_URL = import.meta.env.VITE_API_URL?.replace(/\/api$/, '')
   ?? import.meta.env.VITE_BACKEND_URL
-  ?? 'http://localhost:8000';
+  ?? 'https://rezi.yopaaa.xyz';
 
 const buildLampiranUrl = (raw) => {
   if (!raw) return null;
