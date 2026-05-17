@@ -1,17 +1,22 @@
 // Auth Context: simpan user+token, login/logout/register
-import { createContext, useContext, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect } from 'react';
 import { loginApi, registerApi, logoutApi, getMeApi } from '../api/auth';
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-  const [user, setUser]       = useState(() => {
+  const [user, setUser]             = useState(() => {
     try { return JSON.parse(localStorage.getItem('bokingyuk_user')); } catch { return null; }
   });
-  const [token, setToken]     = useState(() => localStorage.getItem('bokingyuk_token'));
-  const [loading, setLoading] = useState(false);
+  const [token, setToken]           = useState(() => localStorage.getItem('bokingyuk_token'));
+  const [loading, setLoading]       = useState(false);
+  const [initializing, setInitializing] = useState(true); // ← BARU: cegah redirect sebelum siap
+
+  // Selesai inisialisasi setelah mount pertama
+  useEffect(() => {
+    setInitializing(false);
+  }, []);
 
   const saveAuth = (u, t) => {
     setUser(u); setToken(t);
@@ -95,6 +100,7 @@ export function AuthProvider({ children }) {
       user,
       token,
       loading,
+      initializing, // ← BARU: expose ke seluruh app
       login,
       register,
       logout,

@@ -39,35 +39,75 @@ import RatingManagement from '../pages/admin/RatingManagement';
 import AuditLog       from '../pages/superadmin/AuditLog';
 import SiteSettings   from '../pages/superadmin/SiteSettings';
 
-// === BARU: Super Admin Full Access ===
-import SuperAdminCustomers      from '../pages/superadmin/Customers';
-import SuperAdminAllBookings    from '../pages/superadmin/AllBookings';
+// === Super Admin Full Access ===
+import SuperAdminCustomers       from '../pages/superadmin/Customers';
+import SuperAdminAllBookings     from '../pages/superadmin/AllBookings';
 import SuperAdminAllTransactions from '../pages/superadmin/AllTransactions';
-import SuperAdminStatistics     from '../pages/superadmin/Statistics';
-import SuperAdminPermissions    from '../pages/superadmin/Permissions';
+import SuperAdminStatistics      from '../pages/superadmin/Statistics';
+import SuperAdminPermissions     from '../pages/superadmin/Permissions';
+
+// ─── Spinner saat initializing ───────────────────────────────────────────────
+function PageSpinner() {
+  return (
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: '#F8F9FC',
+    }}>
+      <svg
+        style={{ width: 36, height: 36, color: '#6366F1' }}
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        className="animate-spin"
+      >
+        <circle className="opacity-25" cx="12" cy="12" r="10"
+          stroke="currentColor" strokeWidth="4" />
+        <path className="opacity-75" fill="currentColor"
+          d="M4 12a8 8 0 018-8v8z" />
+      </svg>
+    </div>
+  );
+}
+
+// ─── Guards ──────────────────────────────────────────────────────────────────
 
 function ProtectedRoute({ children }) {
-  const { token } = useAuth();
+  const { token, initializing, loading } = useAuth();
   const loc = useLocation();
+
+  // Tunggu sampai auth context selesai inisialisasi / googleLogin selesai
+  if (initializing || loading) return <PageSpinner />;
+
   if (!token) return <Navigate to="/login" state={{ from: loc }} replace />;
   return children;
 }
 
 function AdminRoute({ children }) {
-  const { token, user } = useAuth();
+  const { token, user, initializing, loading } = useAuth();
   const loc = useLocation();
+
+  if (initializing || loading) return <PageSpinner />;
+
   if (!token) return <Navigate to="/login" state={{ from: loc }} replace />;
   if (!['admin', 'super_admin'].includes(user?.role)) return <Navigate to="/" replace />;
   return children;
 }
 
 function SuperAdminRoute({ children }) {
-  const { token, user } = useAuth();
+  const { token, user, initializing, loading } = useAuth();
   const loc = useLocation();
+
+  if (initializing || loading) return <PageSpinner />;
+
   if (!token) return <Navigate to="/login" state={{ from: loc }} replace />;
   if (user?.role !== 'super_admin') return <Navigate to="/" replace />;
   return children;
 }
+
+// ─── Routes ──────────────────────────────────────────────────────────────────
 
 export default function AppRoutes() {
   return (
@@ -110,7 +150,7 @@ export default function AppRoutes() {
       <Route path="/super-admin/audit-log"      element={<SuperAdminRoute><AuditLog /></SuperAdminRoute>} />
       <Route path="/super-admin/settings"       element={<SuperAdminRoute><SiteSettings /></SuperAdminRoute>} />
 
-      {/* Super Admin — new full-access pages */}
+      {/* Super Admin — full access */}
       <Route path="/super-admin/customers"        element={<SuperAdminRoute><SuperAdminCustomers /></SuperAdminRoute>} />
       <Route path="/super-admin/all-bookings"     element={<SuperAdminRoute><SuperAdminAllBookings /></SuperAdminRoute>} />
       <Route path="/super-admin/all-transactions" element={<SuperAdminRoute><SuperAdminAllTransactions /></SuperAdminRoute>} />
