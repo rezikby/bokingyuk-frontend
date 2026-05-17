@@ -197,7 +197,7 @@ export default function Register() {
                 <path d="M2 12h20"/>
                 <path d="M7 3v4M17 3v4M7 17v4M17 17v4"/>
               </svg>
-              <span className="reg-badge-text">BokinYuk</span>
+              <span className="reg-badge-text">BokingYuk</span>
             </div>
             <div>
               <h1 className="reg-title">Buat akun baru</h1>

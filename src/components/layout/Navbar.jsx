@@ -59,7 +59,7 @@ export default function Navbar() {
           <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center">
             <Calendar size={15} className="text-white" />
           </div>
-          BokinYuk
+          BokingYuk
         </Link>
 
         {/* Desktop nav */}
