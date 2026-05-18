@@ -134,7 +134,7 @@ export default function Navbar() {
 
                 {[
                   { to: '/profile',         icon: User,       label: 'Profil Saya' },
-                  { to: '/payment-history', icon: CreditCard, label: 'Riwayat Pembayaran' },
+                  { to: '/503', icon: CreditCard, label: 'Riwayat Pembayaran' },
                 ].map(({ to, icon: Icon, label }) => (
                   <Link key={to} to={to} onClick={closeAll}
                     className="flex items-center gap-3 px-4 py-2.5 text-sm text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 hover:text-indigo-600 dark:hover:text-indigo-400 transition-colors">

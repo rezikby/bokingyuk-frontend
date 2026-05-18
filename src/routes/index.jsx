@@ -45,6 +45,7 @@ import SuperAdminAllBookings     from '../pages/superadmin/AllBookings';
 import SuperAdminAllTransactions from '../pages/superadmin/AllTransactions';
 import SuperAdminStatistics      from '../pages/superadmin/Statistics';
 import SuperAdminPermissions     from '../pages/superadmin/Permissions';
+import Menten from '../pages/Menten';
 
 // ─── Spinner saat initializing ───────────────────────────────────────────────
 function PageSpinner() {
@@ -159,6 +160,9 @@ export default function AppRoutes() {
 
       {/* 404 */}
       <Route path="*" element={<NotFound />} />
+
+      {/* 503 */}
+      <Route path="/503" element={<Menten />} />
     </Routes>
   );
 }
