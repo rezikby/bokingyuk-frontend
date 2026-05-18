@@ -144,7 +144,7 @@ export default function Menten() {
             Kembali
           </button>
 
-          {token ? (
+          {/* {token ? (
             <Link
               to={isAdmin ? "/admin" : "/"}
               className="inline-flex items-center gap-2 px-6 py-3 text-sm font-medium rounded-xl bg-blue-500 hover:bg-blue-600 text-white transition-colors"
@@ -160,7 +160,7 @@ export default function Menten() {
               <Home size={15} />
               Login
             </Link>
-          )}
+          )} */}
         </div>
       </div>
     </div>

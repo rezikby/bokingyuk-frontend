@@ -22,10 +22,14 @@ const navItems = [
   { to: '/super-admin/all-transactions', icon: CreditCard,      label: 'Semua Transaksi' },
   { to: '/super-admin/statistics',       icon: BarChart3,       label: 'Statistik' },
   { to: '/super-admin/audit-log',        icon: ShieldAlert,     label: 'Audit Log' },
-  { to: '/super-admin/monitoring',       icon: Server,          label: 'Monitoring Server' },
-  { to: '/super-admin/notifications',    icon: Bell,            label: 'Notification Center' },
-  { to: '/super-admin/refund',           icon: RotateCcw,       label: 'Refund' },
-  { to: '/super-admin/backup',           icon: RefreshCw,       label: 'Backup Database' },
+  { to: '/503',       icon: Server,          label: 'Monitoring Server' },
+  // { to: '/super-admin/monitoring',       icon: Server,          label: 'Monitoring Server' },
+   { to: '/503',    icon: Bell,            label: 'Notification Center' },
+  // { to: '/super-admin/notifications',    icon: Bell,            label: 'Notification Center' },
+  { to: '/503',           icon: RotateCcw,       label: 'Refund' },
+  // { to: '/super-admin/refund',           icon: RotateCcw,       label: 'Refund' },
+  { to: '/503',           icon: RefreshCw,       label: 'Backup Database' },
+  // { to: '/super-admin/backup',           icon: RefreshCw,       label: 'Backup Database' },
   { to: '/super-admin/settings',         icon: Settings2,       label: 'Pengaturan Situs' },
 ];
 
