@@ -307,7 +307,7 @@ export default function Login() {
               </svg>
               <span className="brand-badge-text">BokingYuk</span>
             </div>
-            <h1 className="brand-title">Selamat datang</h1>
+            <h1 className="brand-title">Selamat</h1>
             <p className="brand-sub">Masuk untuk melanjutkan ke akun Anda</p>
           </div>
 
