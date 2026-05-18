@@ -189,7 +189,6 @@ export default function Login() {
           object-fit: cover;
         }
 
-
         /* ── RIGHT PANEL ── */
         .right-panel {
           width: 50%;
@@ -350,12 +349,13 @@ export default function Login() {
         /* ── Responsive: stack on small screens ── */
         @media (max-width: 768px) {
           .login-root { flex-direction: column; }
-          .left-panel, .right-panel { width: 100%; min-height: auto; }
-          .left-panel { padding: 2.5rem 1.5rem 2rem; }
-          .right-panel { padding: 2rem 1.5rem 3rem; }
+          .left-panel { display: none; }
           .panel-divider { display: none; }
-          .hero-image-wrap { max-width: 280px; margin: 0 auto; }
-          .stat-pills { justify-content: center; }
+          .right-panel {
+            width: 100%;
+            min-height: 100vh;
+            padding: 2.5rem 1.5rem 3rem;
+          }
         }
       `}</style>
 
