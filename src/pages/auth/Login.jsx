@@ -27,7 +27,6 @@ function GoogleIcon() {
   );
 }
 
-/* ── Spinner ── */
 function Spinner({ className = '' }) {
   return (
     <svg className={`animate-spin w-4 h-4 ${className}`} xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
@@ -90,40 +89,23 @@ export default function Login() {
 
   return (
     <>
-      {/* ── Google Fonts ── */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         .login-root {
           font-family: 'Plus Jakarta Sans', sans-serif;
           min-height: 100vh;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1.5rem;
-          position: relative;
-          overflow: hidden;
+          align-items: stretch;
           background: #F8F9FC;
           transition: background 0.3s;
+          position: relative;
+          overflow: hidden;
         }
         .login-root.dark-mode {
           background: #0D1117;
-        }
-
-        /* Subtle mesh background */
-        .login-root::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(ellipse 60% 50% at 10% 10%, rgba(99,102,241,0.08) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 60% at 90% 90%, rgba(168,85,247,0.06) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .dark-mode::before {
-          background:
-            radial-gradient(ellipse 60% 50% at 10% 10%, rgba(99,102,241,0.12) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 60% at 90% 90%, rgba(168,85,247,0.09) 0%, transparent 70%);
         }
 
         /* ── Theme toggle ── */
@@ -143,7 +125,7 @@ export default function Login() {
           cursor: pointer;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
           transition: background 0.2s, color 0.2s, border-color 0.2s;
-          z-index: 10;
+          z-index: 20;
         }
         .dark-mode .theme-btn {
           background: #161B22;
@@ -153,31 +135,110 @@ export default function Login() {
         .theme-btn:hover { background: #F1F5F9; }
         .dark-mode .theme-btn:hover { background: #1E2530; }
 
-        /* ── Card ── */
-        .login-card {
-          width: 100%;
-          max-width: 420px;
-          background: #fff;
-          border-radius: 1.25rem;
-          border: 1px solid rgba(0,0,0,0.07);
-          box-shadow:
-            0 1px 3px rgba(0,0,0,0.04),
-            0 8px 32px rgba(0,0,0,0.06);
-          padding: 2.25rem 2.25rem 2rem;
+        /* ── LEFT PANEL ── */
+        .left-panel {
+          width: 50%;
+          min-height: 100vh;
           position: relative;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          padding: 0;
+          overflow: hidden;
+          background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 40%, #EDE9FE 80%, #F0F4FF 100%);
+          flex-shrink: 0;
+        }
+        .dark-mode .left-panel {
+          background: linear-gradient(145deg, #13111C 0%, #1A1628 40%, #160F2C 80%, #0F1220 100%);
+        }
+
+        /* Decorative blobs behind image */
+        .left-panel::before {
+          content: '';
+          position: absolute;
+          width: 420px;
+          height: 420px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 70%);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+        .left-panel::after {
+          content: '';
+          position: absolute;
+          width: 300px;
+          height: 300px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(168,85,247,0.09) 0%, transparent 70%);
+          bottom: 10%;
+          right: 5%;
+          pointer-events: none;
+        }
+
+        .hero-image-wrap {
+          position: absolute;
+          inset: 0;
           z-index: 1;
         }
-        .dark-mode .login-card {
-          background: #161B22;
-          border-color: rgba(255,255,255,0.07);
-          box-shadow:
-            0 1px 3px rgba(0,0,0,0.2),
-            0 8px 32px rgba(0,0,0,0.3);
+        .hero-image-wrap img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+
+        /* ── RIGHT PANEL ── */
+        .right-panel {
+          width: 50%;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2.5rem 3rem;
+          position: relative;
+          background: #fff;
+          flex-shrink: 0;
+        }
+        .dark-mode .right-panel {
+          background: #0D1117;
+        }
+
+        /* Subtle mesh on right panel */
+        .right-panel::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse 50% 40% at 80% 20%, rgba(99,102,241,0.04) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 50% at 20% 80%, rgba(168,85,247,0.03) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        /* Vertical divider */
+        .panel-divider {
+          width: 1px;
+          background: linear-gradient(to bottom, transparent, rgba(99,102,241,0.15) 30%, rgba(99,102,241,0.15) 70%, transparent);
+          align-self: stretch;
+          flex-shrink: 0;
+        }
+        .dark-mode .panel-divider {
+          background: linear-gradient(to bottom, transparent, rgba(99,102,241,0.2) 30%, rgba(99,102,241,0.2) 70%, transparent);
+        }
+
+        /* Form container */
+        .form-container {
+          width: 100%;
+          max-width: 380px;
+          position: relative;
+          z-index: 1;
         }
 
         /* ── Brand ── */
         .brand-area {
-          margin-bottom: 1.75rem;
+          margin-bottom: 2rem;
         }
         .brand-badge {
           display: inline-flex;
@@ -188,9 +249,7 @@ export default function Login() {
           padding: 0.45rem 0.85rem;
           margin-bottom: 1.25rem;
         }
-        .brand-badge svg {
-          color: #fff;
-        }
+        .brand-badge svg { color: #fff; }
         .brand-badge-text {
           font-size: 0.8125rem;
           font-weight: 700;
@@ -198,19 +257,20 @@ export default function Login() {
           letter-spacing: 0.02em;
         }
         .brand-title {
-          font-size: 1.5rem;
+          font-size: 1.625rem;
           font-weight: 700;
           color: #0F172A;
-          margin: 0 0 0.25rem;
-          letter-spacing: -0.02em;
+          margin: 0 0 0.3rem;
+          letter-spacing: -0.025em;
+          line-height: 1.2;
         }
         .dark-mode .brand-title { color: #F1F5F9; }
         .brand-sub {
           font-size: 0.875rem;
           color: #64748B;
           margin: 0;
+          line-height: 1.5;
         }
-        .dark-mode .brand-sub { color: #64748B; }
 
         /* ── Divider ── */
         .divider {
@@ -229,6 +289,7 @@ export default function Login() {
           font-size: 0.75rem;
           color: #94A3B8;
           font-weight: 500;
+          white-space: nowrap;
         }
 
         /* ── Google button ── */
@@ -284,8 +345,18 @@ export default function Login() {
         .footer-link:hover { text-decoration: underline; }
 
         /* ── Spacing helpers ── */
-        .gap-4 { gap: 1rem; }
         .space { display: flex; flex-direction: column; gap: 1.125rem; }
+
+        /* ── Responsive: stack on small screens ── */
+        @media (max-width: 768px) {
+          .login-root { flex-direction: column; }
+          .left-panel, .right-panel { width: 100%; min-height: auto; }
+          .left-panel { padding: 2.5rem 1.5rem 2rem; }
+          .right-panel { padding: 2rem 1.5rem 3rem; }
+          .panel-divider { display: none; }
+          .hero-image-wrap { max-width: 280px; margin: 0 auto; }
+          .stat-pills { justify-content: center; }
+        }
       `}</style>
 
       <div className={`login-root${dark ? ' dark-mode' : ''}`}>
@@ -294,67 +365,79 @@ export default function Login() {
           {dark ? <Sun size={15} /> : <Moon size={15} />}
         </button>
 
-        <div className="login-card">
-          {/* Brand */}
-          <div className="brand-area">
-            <div className="brand-badge">
-              {/* Court/field icon */}
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="18" rx="2"/>
-                <line x1="12" y1="3" x2="12" y2="21"/>
-                <path d="M2 12h20"/>
-                <path d="M7 3v4M17 3v4M7 17v4M17 17v4"/>
-              </svg>
-              <span className="brand-badge-text">BokingYuk</span>
-            </div>
-            <h1 className="brand-title">Selamat Datang</h1>
-            <p className="brand-sub">Masuk untuk melanjutkan ke akun Anda</p>
+        {/* ── LEFT PANEL: Illustration ── */}
+        <div className="left-panel">
+          <div className="hero-image-wrap">
+            <img src="/img/gambar2.png" alt="BokingYuk Sports" />
           </div>
+        </div>
 
-          {/* Form */}
-          <div className="space">
-            <form onSubmit={handleSubmit(onSubmit)} className="space">
-              <Input
-                label="Email"
-                type="email"
-                placeholder="nama@email.com"
-                error={errors.email?.message}
-                {...register('email')}
-              />
-              <Input
-                label="Password"
-                type="password"
-                placeholder="••••••••"
-                error={errors.password?.message}
-                {...register('password')}
-              />
-              <Button type="submit" className="w-full" loading={loading} size="lg">
-                Masuk
-              </Button>
-            </form>
+        {/* Vertical divider */}
+        <div className="panel-divider" />
 
-            {/* Divider */}
-            <div className="divider">
-              <div className="divider-line" />
-              <span className="divider-text">atau lanjutkan dengan</span>
-              <div className="divider-line" />
+        {/* ── RIGHT PANEL: Form ── */}
+        <div className="right-panel">
+          <div className="form-container">
+            {/* Brand */}
+            <div className="brand-area">
+              <div className="brand-badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="18" rx="2"/>
+                  <line x1="12" y1="3" x2="12" y2="21"/>
+                  <path d="M2 12h20"/>
+                  <path d="M7 3v4M17 3v4M7 17v4M17 17v4"/>
+                </svg>
+                <span className="brand-badge-text">BokingYuk</span>
+              </div>
+              <h1 className="brand-title">Selamat Datang</h1>
+              <p className="brand-sub">Masuk untuk melanjutkan ke akun Anda</p>
             </div>
 
-            {/* Google */}
-            <button
-              onClick={handleGoogleLogin}
-              disabled={googleLoading || loading}
-              className="google-btn"
-            >
-              {googleLoading ? <Spinner className="text-slate-400" /> : <GoogleIcon />}
-              {googleLoading ? 'Menghubungkan...' : 'Google'}
-            </button>
+            {/* Form + extras */}
+            <div className="space">
+              <form onSubmit={handleSubmit(onSubmit)} className="space">
+                <Input
+                  label="Email"
+                  type="email"
+                  placeholder="nama@email.com"
+                  error={errors.email?.message}
+                  {...register('email')}
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  placeholder="••••••••"
+                  error={errors.password?.message}
+                  {...register('password')}
+                />
+                <Button type="submit" className="w-full" loading={loading} size="lg">
+                  Masuk
+                </Button>
+              </form>
 
-            {/* Footer */}
-            <p className="footer-text">
-              Belum punya akun?{' '}
-              <Link to="/register" className="footer-link">Daftar sekarang</Link>
-            </p>
+              {/* Divider */}
+              <div className="divider">
+                <div className="divider-line" />
+                <span className="divider-text">atau lanjutkan dengan</span>
+                <div className="divider-line" />
+              </div>
+
+              {/* Google */}
+              <button
+                onClick={handleGoogleLogin}
+                disabled={googleLoading || loading}
+                className="google-btn"
+              >
+                {googleLoading ? <Spinner className="text-slate-400" /> : <GoogleIcon />}
+                {googleLoading ? 'Menghubungkan...' : 'Google'}
+              </button>
+
+              {/* Footer */}
+              <p className="footer-text">
+                Belum punya akun?{' '}
+                <Link to="/register" className="footer-link">Daftar sekarang</Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>
