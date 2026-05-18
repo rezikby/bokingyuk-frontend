@@ -36,9 +36,7 @@ const TYPE_GRADIENT = {
   tennis: 'from-yellow-400 to-lime-600',
 };
 
-// ─────────────────────────────────────────────
-// HITUNG JARAK
-// ─────────────────────────────────────────────
+// jarak antar dua titik koordinat (latitude, longitude) dalam km
 function haversineKm(lat1, lon1, lat2, lon2) {
   const R = 6371;
 
