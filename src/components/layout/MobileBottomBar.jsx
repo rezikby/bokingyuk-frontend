@@ -23,10 +23,12 @@ export default function MobileBottomBar() {
   const location = useLocation();
   const { user } = useAuth();
 
+  // FIX #1 + #3: key unread_count (bukan count), polling 10 detik
   const { data: unreadData } = useQuery({
     queryKey: ['notification-unread'],
-    queryFn: () => getUnreadCountApi().then(r => r.data.data?.count || 0),
-    refetchInterval: 30000,
+    queryFn: () => getUnreadCountApi().then(r => r.data.data?.unread_count || 0),
+    refetchInterval: 10_000,
+    refetchIntervalInBackground: true,
     enabled: !!user,
   });
   const unreadCount = unreadData || 0;
@@ -42,6 +44,9 @@ export default function MobileBottomBar() {
             ? location.pathname === '/'
             : location.pathname.startsWith(to);
 
+          // FIX #3: dot orange jika user di halaman lain (bukan di /notifications)
+          const isOnThisPage = location.pathname.startsWith(to);
+
           return (
             <Link
               key={to}
@@ -54,12 +59,18 @@ export default function MobileBottomBar() {
             >
               <div className="relative">
                 <Icon size={22} strokeWidth={isActive ? 2.2 : 1.8} />
-                {badge && unreadCount > 0 && (
+                {/* Badge angka jika unread dan TIDAK di halaman notif */}
+                {badge && unreadCount > 0 && !isOnThisPage && (
                   <span className="absolute -top-1.5 -right-1.5 min-w-[16px] h-4 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-0.5">
                     {unreadCount > 9 ? '9+' : unreadCount}
                   </span>
                 )}
+                {/* FIX #3: Dot orange jika di halaman notif tapi masih ada unread */}
+                {badge && unreadCount > 0 && isOnThisPage && (
+                  <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-orange-500 rounded-full border-2 border-white dark:border-[#111827]" />
+                )}
               </div>
+              <span className="text-[10px] font-medium">{label}</span>
               {/* Active dot indicator */}
               {isActive && (
                 <span className="absolute bottom-1.5 w-1 h-1 rounded-full bg-indigo-600 dark:bg-indigo-400" />

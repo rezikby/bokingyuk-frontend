@@ -3,10 +3,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
+import { useTheme } from '../../contexts/ThemeContext'; // FIX #5
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { googleRedirectApi } from '../../api/auth';
 import { useState } from 'react';
+import { Sun, Moon } from 'lucide-react'; // FIX #5
 import toast from 'react-hot-toast';
 
 const schema = z.object({
@@ -42,6 +44,7 @@ function Spinner() {
 
 export default function Register() {
   const { register: regAuth, loading } = useAuth();
+  const { dark, toggle } = useTheme(); // FIX #5
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
   const { register, handleSubmit, setError, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
@@ -77,6 +80,11 @@ export default function Register() {
           padding: 1rem 1.25rem;
           background: #F8F9FC;
           position: relative;
+          transition: background 0.3s;
+        }
+        /* FIX #5: dark mode background */
+        .reg-root.dark-mode {
+          background: #0D1117;
         }
         .reg-root::before {
           content: '';
@@ -87,6 +95,38 @@ export default function Register() {
             radial-gradient(ellipse 50% 60% at 90% 90%, rgba(168,85,247,0.06) 0%, transparent 70%);
           pointer-events: none;
         }
+        .dark-mode.reg-root::before {
+          background:
+            radial-gradient(ellipse 60% 50% at 10% 10%, rgba(99,102,241,0.12) 0%, transparent 70%),
+            radial-gradient(ellipse 50% 60% at 90% 90%, rgba(168,85,247,0.09) 0%, transparent 70%);
+        }
+
+        /* FIX #5: theme toggle button */
+        .theme-btn {
+          position: fixed;
+          top: 1.25rem;
+          right: 1.25rem;
+          width: 2.25rem;
+          height: 2.25rem;
+          border-radius: 0.625rem;
+          border: 1px solid rgba(0,0,0,0.08);
+          background: #fff;
+          color: #64748B;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          cursor: pointer;
+          box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+          transition: background 0.2s, color 0.2s, border-color 0.2s;
+          z-index: 10;
+        }
+        .dark-mode .theme-btn {
+          background: #161B22;
+          border-color: rgba(255,255,255,0.08);
+          color: #94A3B8;
+        }
+        .theme-btn:hover { background: #F1F5F9; }
+        .dark-mode .theme-btn:hover { background: #1E2530; }
 
         .reg-card {
           width: 100%;
@@ -98,6 +138,13 @@ export default function Register() {
           padding: 1.375rem 1.625rem 1.25rem;
           position: relative;
           z-index: 1;
+          transition: background 0.3s, border-color 0.3s;
+        }
+        /* FIX #5: dark card */
+        .dark-mode .reg-card {
+          background: #161B22;
+          border-color: rgba(255,255,255,0.07);
+          box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.3);
         }
 
         .reg-brand {
@@ -107,7 +154,10 @@ export default function Register() {
           margin-bottom: 1.125rem;
           padding-bottom: 1rem;
           border-bottom: 1px solid #F1F5F9;
+          transition: border-color 0.3s;
         }
+        .dark-mode .reg-brand { border-bottom-color: #21262D; }
+
         .reg-badge {
           display: inline-flex;
           align-items: center;
@@ -129,12 +179,15 @@ export default function Register() {
           color: #0F172A;
           margin: 0 0 0.1rem;
           letter-spacing: -0.01em;
+          transition: color 0.3s;
         }
+        .dark-mode .reg-title { color: #F1F5F9; }
         .reg-sub {
           font-size: 0.6875rem;
           color: #94A3B8;
           margin: 0;
         }
+        .dark-mode .reg-sub { color: #64748B; }
 
         .section-label {
           font-size: 0.5625rem;
@@ -144,6 +197,7 @@ export default function Register() {
           color: #CBD5E1;
           margin: 0 0 0.375rem;
         }
+        .dark-mode .section-label { color: #374151; }
 
         .two-col {
           display: grid;
@@ -152,7 +206,8 @@ export default function Register() {
         }
 
         .divider { display: flex; align-items: center; gap: 0.5rem; }
-        .divider-line { flex: 1; height: 1px; background: #E2E8F0; }
+        .divider-line { flex: 1; height: 1px; background: #E2E8F0; transition: background 0.3s; }
+        .dark-mode .divider-line { background: #21262D; }
         .divider-text { font-size: 0.625rem; color: #94A3B8; font-weight: 500; }
 
         .google-btn {
@@ -173,7 +228,13 @@ export default function Register() {
           transition: background 0.15s, border-color 0.15s;
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
+        .dark-mode .google-btn {
+          background: #161B22;
+          border-color: rgba(255,255,255,0.1);
+          color: #94A3B8;
+        }
         .google-btn:hover:not(:disabled) { background: #F8FAFC; border-color: #CBD5E1; }
+        .dark-mode .google-btn:hover:not(:disabled) { background: #1E2530; border-color: rgba(255,255,255,0.15); }
         .google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
         .footer-text { text-align: center; font-size: 0.6875rem; color: #64748B; margin: 0; }
@@ -182,10 +243,18 @@ export default function Register() {
 
         .stack    { display: flex; flex-direction: column; gap: 0.5rem; }
         .stack-sm { display: flex; flex-direction: column; gap: 0.4rem; }
-        .sep { height: 1px; background: #F1F5F9; margin: 0.25rem 0; }
+        .sep { height: 1px; background: #F1F5F9; margin: 0.25rem 0; transition: background 0.3s; }
+        .dark-mode .sep { background: #21262D; }
       `}</style>
 
-      <div className="reg-root">
+      {/* FIX #5: tambah class dark-mode jika dark aktif */}
+      <div className={`reg-root${dark ? ' dark-mode' : ''}`}>
+
+        {/* FIX #5: Tombol toggle dark mode */}
+        <button onClick={toggle} className="theme-btn" title={dark ? 'Mode Terang' : 'Mode Gelap'}>
+          {dark ? <Sun size={15} /> : <Moon size={15} />}
+        </button>
+
         <div className="reg-card">
 
           {/* Brand — horizontal compact */}

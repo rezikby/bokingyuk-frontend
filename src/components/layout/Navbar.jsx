@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
 import { useTheme } from '../../contexts/ThemeContext';
 import { useQuery } from '@tanstack/react-query';
@@ -15,18 +15,24 @@ export default function Navbar() {
   const { user, logout } = useAuth();
   const { dark, toggle } = useTheme();
   const navigate = useNavigate();
+  const location = useLocation();
   const [mobileOpen, setMobileOpen]     = useState(false);
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const menuRef = useRef(null);
 
+  // ── FIX #1: key adalah unread_count (bukan count), polling 10 detik ──────
   const { data: unreadData } = useQuery({
     queryKey: ['notification-unread'],
-    queryFn: () => getUnreadCountApi().then(r => r.data.data?.count || 0),
-    refetchInterval: 30000,
+    queryFn: () => getUnreadCountApi().then(r => r.data.data?.unread_count || 0),
+    refetchInterval: 10_000,          // dipercepat dari 30s → 10s
+    refetchIntervalInBackground: true, // tetap poll meski tab di background
     enabled: !!user,
   });
   const unreadCount = unreadData || 0;
+
+  // ── FIX #3: badge orange dot muncul saat pengguna di halaman LAIN ────────
+  const isOnNotifPage = location.pathname === '/notifications';
 
   const handleLogout = async () => { await logout(); navigate('/login'); };
 
@@ -72,16 +78,20 @@ export default function Navbar() {
           </Link>
 
           <div className="flex items-center gap-1 ml-1 pl-1 border-l border-slate-200 dark:border-slate-700">
-            {/* Notification bell */}
+            {/* Notification bell dengan badge */}
             <Link
               to="/notifications"
               className="relative p-2 rounded-xl text-slate-500 hover:text-slate-800 hover:bg-slate-100 dark:text-slate-400 dark:hover:text-slate-100 dark:hover:bg-slate-800 transition-colors"
             >
               <Bell size={17} />
-              {unreadCount > 0 && (
-                <span className="absolute top-1 right-1 w-3.5 h-3.5 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center">
+              {/* FIX #3: angka jika ada unread, dot orange jika di halaman lain */}
+              {unreadCount > 0 && !isOnNotifPage && (
+                <span className="absolute top-1 right-1 min-w-[14px] h-3.5 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-0.5">
                   {unreadCount > 9 ? '9+' : unreadCount}
                 </span>
+              )}
+              {unreadCount > 0 && isOnNotifPage && (
+                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full" />
               )}
             </Link>
 
@@ -123,7 +133,7 @@ export default function Navbar() {
                 </div>
 
                 {[
-                  { to: '/profile', icon: User, label: 'Profil Saya' },
+                  { to: '/profile',         icon: User,       label: 'Profil Saya' },
                   { to: '/payment-history', icon: CreditCard, label: 'Riwayat Pembayaran' },
                 ].map(({ to, icon: Icon, label }) => (
                   <Link key={to} to={to} onClick={closeAll}
@@ -169,12 +179,23 @@ export default function Navbar() {
           </div>
         </div>
 
-        {/* Mobile: dark toggle + user avatar (menu burger dihapus, pakai bottom bar) */}
+        {/* Mobile: dark toggle + burger */}
         <div className="md:hidden flex items-center gap-1">
+          {/* FIX #3: bell icon dengan badge di mobile */}
+          <Link to="/notifications" className="relative p-2 text-slate-500 dark:text-slate-400">
+            <Bell size={19} />
+            {unreadCount > 0 && !isOnNotifPage && (
+              <span className="absolute top-1 right-1 min-w-[14px] h-3.5 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-0.5">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
+            {unreadCount > 0 && isOnNotifPage && (
+              <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-orange-500 rounded-full" />
+            )}
+          </Link>
           <button onClick={toggle} className="p-2 text-slate-500 dark:text-slate-400">
             {dark ? <Sun size={17} /> : <Moon size={17} />}
           </button>
-          {/* User menu tetap ada di mobile via burger untuk logout/settings */}
           <button
             className="p-2 rounded-xl hover:bg-slate-100 dark:hover:bg-slate-800"
             onClick={() => setMobileOpen(!mobileOpen)}
@@ -184,7 +205,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile dropdown menu - settings & logout */}
+      {/* Mobile dropdown menu */}
       {mobileOpen && (
         <div className="md:hidden border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#111827] px-4 py-3 space-y-0.5">
           <div className="flex items-center gap-3 px-3 py-2 mb-1">

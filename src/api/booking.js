@@ -13,3 +13,5 @@ export const adminGetBookingApi      = (code)     => api.get(`/v1/admin/bookings
 export const adminCheckInApi         = (qr_token) => api.post('/v1/admin/bookings/check-in', { qr_token });
 export const adminCancelBookingApi   = (code)     => api.patch(`/v1/admin/bookings/${code}/cancel`);
 export const adminConfirmPaymentApi  = (code)     => api.patch(`/v1/admin/bookings/${code}/confirm-payment`);
+// Sync status payment dari Midtrans (polling pengganti webhook di localhost)
+export const adminSyncPaymentsApi    = ()         => api.get('/v1/admin/bookings/sync-payments');

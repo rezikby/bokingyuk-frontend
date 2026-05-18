@@ -12,17 +12,16 @@ import {
   Search, Filter, XCircle, CheckCircle, RefreshCw,
   Bell, Volume2, VolumeX, X, Calendar, CreditCard, Zap,
   ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight,
-  Wifi, WifiOff,
 } from 'lucide-react';
 import { formatDate, formatTime, formatPrice } from '../../utils/format';
 import toast from 'react-hot-toast';
 import { useBooking } from '../../contexts/BookingContext';
 
-const STATUSES        = ['', 'pending', 'confirmed', 'checked_in', 'completed', 'cancelled'];
-const POLL_INTERVAL   = 5_000;   // 5 detik — lebih agresif untuk deteksi pembayaran cepat
-const FAST_INTERVAL   = 2_000;   // 2 detik saat ada booking pending payment
-const PAGE_SIZE       = 10;
-const NOTIF_DURATION  = 8_000;
+const STATUSES       = ['', 'pending', 'confirmed', 'checked_in', 'completed', 'cancelled'];
+const POLL_INTERVAL  = 5_000;   // normal: 5 detik
+const FAST_INTERVAL  = 2_000;   // saat ada unpaid: 2 detik supaya cepat deteksi lunas
+const PAGE_SIZE      = 10;
+const NOTIF_DURATION = 8_000;
 
 // ─── AudioContext singleton ────────────────────────────────────────────────────
 let _audioCtx = null;
@@ -89,17 +88,11 @@ function isTimeToCheckIn(b) {
 
 // ─── Toast styles ──────────────────────────────────────────────────────────────
 const TS = {
-  payment:     { wrap: 'bg-green-50 dark:bg-green-900/90 border-green-200 dark:border-green-700',   icon: 'bg-green-500 text-white',   title: 'text-green-800 dark:text-green-200',   msg: 'text-green-600 dark:text-green-300',   bar: 'bg-green-500',   cnt: 'text-green-500'   },
-  checkin:     { wrap: 'bg-purple-50 dark:bg-purple-900/90 border-purple-200 dark:border-purple-700', icon: 'bg-purple-500 text-white', title: 'text-purple-800 dark:text-purple-200', msg: 'text-purple-600 dark:text-purple-300', bar: 'bg-purple-500', cnt: 'text-purple-500' },
-  booking:     { wrap: 'bg-blue-50 dark:bg-blue-900/90 border-blue-200 dark:border-blue-700',       icon: 'bg-blue-500 text-white',    title: 'text-blue-800 dark:text-blue-200',    msg: 'text-blue-600 dark:text-blue-300',    bar: 'bg-blue-500',   cnt: 'text-blue-500'   },
-  autoconfirm: { wrap: 'bg-emerald-50 dark:bg-emerald-900/90 border-emerald-200 dark:border-emerald-700', icon: 'bg-emerald-500 text-white', title: 'text-emerald-800 dark:text-emerald-200', msg: 'text-emerald-600 dark:text-emerald-300', bar: 'bg-emerald-500', cnt: 'text-emerald-500' },
+  payment: { wrap: 'bg-green-50 dark:bg-green-900/90 border-green-200 dark:border-green-700', icon: 'bg-green-500 text-white', title: 'text-green-800 dark:text-green-200', msg: 'text-green-600 dark:text-green-300', bar: 'bg-green-500', cnt: 'text-green-500' },
+  checkin: { wrap: 'bg-purple-50 dark:bg-purple-900/90 border-purple-200 dark:border-purple-700', icon: 'bg-purple-500 text-white', title: 'text-purple-800 dark:text-purple-200', msg: 'text-purple-600 dark:text-purple-300', bar: 'bg-purple-500', cnt: 'text-purple-500' },
+  booking: { wrap: 'bg-blue-50 dark:bg-blue-900/90 border-blue-200 dark:border-blue-700', icon: 'bg-blue-500 text-white', title: 'text-blue-800 dark:text-blue-200', msg: 'text-blue-600 dark:text-blue-300', bar: 'bg-blue-500', cnt: 'text-blue-500' },
 };
-const TI = {
-  payment:     <CreditCard size={18} />,
-  checkin:     <Zap size={18} />,
-  booking:     <Calendar size={18} />,
-  autoconfirm: <CheckCircle size={18} />,
-};
+const TI = { payment: <CreditCard size={18} />, checkin: <Zap size={18} />, booking: <Calendar size={18} /> };
 
 // ─── NotificationToast ─────────────────────────────────────────────────────────
 function NotificationToast({ notif, onClose }) {
@@ -180,7 +173,7 @@ function LiveIndicator({ isFetching, lastUpdate, soundEnabled, onToggleSound, is
           <span className={`relative inline-flex rounded-full h-2 w-2 ${isFastMode ? 'bg-amber-500' : 'bg-green-500'}`} />
         </span>
         <span className={`text-xs font-semibold ${isFastMode ? 'text-amber-700 dark:text-amber-400' : 'text-green-700 dark:text-green-400'}`}>
-          {isFastMode ? 'MONITORING' : 'LIVE'}
+          {isFastMode ? `LIVE · ${FAST_INTERVAL / 1000}s` : 'LIVE'}
         </span>
       </div>
       {lastUpdate && <span className="text-xs text-gray-400 hidden sm:block">{lastUpdate}</span>}
@@ -247,17 +240,13 @@ export default function AdminBookings() {
   const [currentPage,   setCurrentPage]   = useState(1);
   const [notifications, setNotifications] = useState([]);
   const [soundEnabled,  setSoundEnabled]  = useState(true);
+  const [isFastMode,    setIsFastMode]    = useState(false);
 
-  // Track mode polling cepat (saat ada booking unpaid)
-  const [isFastMode, setIsFastMode] = useState(false);
-
-  const soundEnabledRef   = useRef(true);
-  const prevBookingsRef   = useRef(null);
-  const isFirstFetchRef   = useRef(true);
-  const filterChangeRef   = useRef(false);
-  const autoCheckedInRef  = useRef(new Set());
-  // Set untuk tracking booking yang sedang dalam proses auto-konfirmasi (hindari double-call)
-  const autoConfirmingRef = useRef(new Set());
+  const soundEnabledRef  = useRef(true);
+  const prevBookingsRef  = useRef(null);
+  const isFirstFetchRef  = useRef(true);
+  const filterChangeRef  = useRef(false);
+  const autoCheckedInRef = useRef(new Set());
 
   const handleToggleSound = useCallback(() => {
     setSoundEnabled(prev => {
@@ -266,21 +255,15 @@ export default function AdminBookings() {
     });
   }, []);
 
-  // Clear badge saat masuk halaman
   useEffect(() => { clearUnread(); }, [clearUnread]);
 
-  // Reset auto-checkin set tengah malam
   useEffect(() => {
     const now = new Date();
     const ms  = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1) - now;
-    const t   = setTimeout(() => {
-      autoCheckedInRef.current  = new Set();
-      autoConfirmingRef.current = new Set();
-    }, ms);
+    const t   = setTimeout(() => { autoCheckedInRef.current = new Set(); }, ms);
     return () => clearTimeout(t);
   }, []);
 
-  // Force-refresh dari event global
   useEffect(() => {
     const h = () => queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
     window.addEventListener('force-refresh-bookings', h);
@@ -291,7 +274,7 @@ export default function AdminBookings() {
   const { data: rawData, isLoading, isFetching, dataUpdatedAt } = useQuery({
     queryKey: ['admin-bookings', filters],
     queryFn:  () => adminGetBookingsApi(filters).then(r => r.data),
-    // Interval dinamis: lebih cepat saat ada yang menunggu pembayaran
+    // Polling cepat saat masih ada yang belum bayar, lambat kalau semua sudah lunas
     refetchInterval: isFastMode ? FAST_INTERVAL : POLL_INTERVAL,
     refetchIntervalInBackground: true,
     refetchOnWindowFocus: true,
@@ -316,22 +299,6 @@ export default function AdminBookings() {
     });
   }, [queryClient]);
 
-  // Optimistic update untuk konfirmasi pembayaran
-  const applyOptimisticPayment = useCallback((bookingCode) => {
-    queryClient.setQueriesData({ queryKey: ['admin-bookings'] }, old => {
-      if (!old) return old;
-      const patch = list => Array.isArray(list)
-        ? list.map(b => b.booking_code === bookingCode
-            ? { ...b, payment_status: 'paid', status: b.status === 'pending' ? 'confirmed' : b.status }
-            : b)
-        : list;
-      if (Array.isArray(old))             return patch(old);
-      if (Array.isArray(old?.data))       return { ...old, data: patch(old.data) };
-      if (Array.isArray(old?.data?.data)) return { ...old, data: { ...old.data, data: patch(old.data.data) } };
-      return old;
-    });
-  }, [queryClient]);
-
   const autoCheckInMutation = useMutation({
     mutationFn: adminCheckInApi,
     onSuccess: (res, qrToken) => {
@@ -343,28 +310,7 @@ export default function AdminBookings() {
     onError: (_, qrToken) => { autoCheckedInRef.current.delete(qrToken); },
   });
 
-  // Mutation khusus auto-konfirmasi pembayaran
-  const autoConfirmPaymentMutation = useMutation({
-    mutationFn: adminConfirmPaymentApi,
-    onSuccess: (res, bookingCode) => {
-      applyOptimisticPayment(bookingCode);
-      const notif = {
-        id:      `autoconfirm-${bookingCode}-${Date.now()}`,
-        type:    'autoconfirm',
-        title:   '✅ Pembayaran Terkonfirmasi Otomatis!',
-        message: `${bookingCode} — lunas & siap bermain`,
-        time:    new Date().toLocaleTimeString('id-ID'),
-      };
-      setNotifications(prev => [notif, ...prev].slice(0, 10));
-      if (soundEnabledRef.current) playSound('payment');
-      toast.success(`✅ Auto-konfirmasi: ${bookingCode}`, { duration: 5000 });
-      setTimeout(() => queryClient.invalidateQueries({ queryKey: ['admin-bookings'] }), 1200);
-    },
-    onError: (_, bookingCode) => {
-      autoConfirmingRef.current.delete(bookingCode);
-    },
-  });
-
+  // Konfirmasi manual oleh admin (tetap tersedia sebagai fallback)
   const cancelMutation = useMutation({
     mutationFn: adminCancelBookingApi,
     onSuccess: () => { toast.success('Booking dibatalkan'); queryClient.invalidateQueries({ queryKey: ['admin-bookings'] }); },
@@ -383,18 +329,18 @@ export default function AdminBookings() {
     setCurrentPage(1);
   }, []);
 
-  // ── CORE: deteksi perubahan → toast + suara + auto-konfirmasi ──────────────
+  // ── CORE: deteksi perubahan data → notif + suara ───────────────────────────
   useEffect(() => {
     const bookings = normalizeList(rawData);
     if (!bookings.length) return;
 
-    // ── Hitung apakah ada yang perlu monitoring ketat ──
-    const hasPendingPayment = bookings.some(
+    // Fast mode: aktif selama masih ada booking belum lunas
+    const hasUnpaid = bookings.some(
       b => b.payment_status !== 'paid' && !['cancelled', 'completed'].includes(b.status)
     );
-    setIsFastMode(hasPendingPayment);
+    setIsFastMode(hasUnpaid);
 
-    // ── Auto check-in ──
+    // Auto check-in: booking confirmed + paid + sudah waktunya main
     bookings.forEach(b => {
       if (
         b.status === 'confirmed' &&
@@ -417,31 +363,27 @@ export default function AdminBookings() {
       }
     });
 
-    // Load pertama / filter baru → init snapshot saja, jangan notif
+    // Load pertama / ganti filter → simpan snapshot dulu, jangan notif
     if (isFirstFetchRef.current || filterChangeRef.current) {
       isFirstFetchRef.current = false;
       filterChangeRef.current = false;
-      prevBookingsRef.current = bookings.map(({ id, payment_status, status, booking_code }) =>
-        ({ id, payment_status, status, booking_code })
-      );
+      prevBookingsRef.current = bookings.map(({ id, payment_status, status }) => ({ id, payment_status, status }));
       return;
     }
 
     if (!prevBookingsRef.current) {
-      prevBookingsRef.current = bookings.map(({ id, payment_status, status, booking_code }) =>
-        ({ id, payment_status, status, booking_code })
-      );
+      prevBookingsRef.current = bookings.map(({ id, payment_status, status }) => ({ id, payment_status, status }));
       return;
     }
 
-    // ── Diff: cari perubahan data ──
+    // Diff: bandingkan snapshot lama vs data terbaru dari server
     const prevMap   = new Map(prevBookingsRef.current.map(b => [b.id, b]));
     const newNotifs = [];
 
     bookings.forEach(b => {
       const prev = prevMap.get(b.id);
 
-      // Booking baru muncul
+      // Booking baru
       if (!prev) {
         newNotifs.push({
           id:      `booking-${b.id}-${Date.now()}`,
@@ -453,48 +395,16 @@ export default function AdminBookings() {
         return;
       }
 
-      // ── PEMBAYARAN MASUK: deteksi & auto-konfirmasi ──
-      // Kondisi: sebelumnya belum paid, sekarang sudah paid (misal dari payment gateway callback)
+      // Status pembayaran berubah jadi paid — data sudah otomatis tampil dari server,
+      // kita hanya perlu kasih notif + bunyi
       if (prev.payment_status !== 'paid' && b.payment_status === 'paid') {
-        // Pembayaran baru terdeteksi → beri notif
         newNotifs.push({
           id:      `payment-${b.id}-${Date.now()}`,
           type:    'payment',
-          title:   '💰 Pembayaran Diterima!',
+          title:   '💰 Pembayaran Lunas!',
           message: `${b.booking_code} · ${b.user?.name} · ${b.total_formatted || formatPrice(b.total_price)}`,
           time:    new Date().toLocaleTimeString('id-ID'),
         });
-      }
-
-      // ── AUTO-KONFIRMASI: jika ada booking yang sudah paid tapi belum confirmed ──
-      // Ini menangani kasus di mana payment_status = 'paid' tapi status masih 'pending'
-      if (
-        b.payment_status === 'paid' &&
-        b.status === 'pending' &&
-        !autoConfirmingRef.current.has(b.booking_code)
-      ) {
-        autoConfirmingRef.current.add(b.booking_code);
-        // Delay kecil supaya tidak semua langsung tembak bersamaan
-        const delay = Math.random() * 300;
-        setTimeout(() => {
-          autoConfirmPaymentMutation.mutate(b.booking_code);
-        }, delay);
-      }
-    });
-
-    // ── Tambahan: scan seluruh list untuk booking paid+pending yang mungkin terlewat ──
-    // (saat halaman baru dibuka dengan data sudah ada yang perlu dikonfirmasi)
-    bookings.forEach(b => {
-      if (
-        b.payment_status === 'paid' &&
-        b.status === 'pending' &&
-        !autoConfirmingRef.current.has(b.booking_code)
-      ) {
-        autoConfirmingRef.current.add(b.booking_code);
-        const delay = Math.random() * 500 + 200;
-        setTimeout(() => {
-          autoConfirmPaymentMutation.mutate(b.booking_code);
-        }, delay);
       }
     });
 
@@ -505,9 +415,8 @@ export default function AdminBookings() {
       }
     }
 
-    prevBookingsRef.current = bookings.map(({ id, payment_status, status, booking_code }) =>
-      ({ id, payment_status, status, booking_code })
-    );
+    // Simpan snapshot terbaru
+    prevBookingsRef.current = bookings.map(({ id, payment_status, status }) => ({ id, payment_status, status }));
   }, [rawData]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // ── Derived ────────────────────────────────────────────────────────────────
@@ -540,12 +449,15 @@ export default function AdminBookings() {
           />
         </div>
 
-        {/* Fast-mode info banner */}
+        {/* Info banner saat fast mode aktif */}
         {isFastMode && (
-          <div className="flex items-center gap-3 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-            <Wifi size={15} className="text-amber-500 shrink-0 animate-pulse" />
+          <div className="flex items-center gap-2.5 px-4 py-2.5 rounded-xl bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+            <span className="relative flex h-2 w-2 shrink-0">
+              <span className="absolute inset-0 rounded-full bg-amber-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+            </span>
             <p className="text-xs text-amber-700 dark:text-amber-300">
-              Mode monitoring aktif — memantau pembayaran setiap <strong>{FAST_INTERVAL / 1000} detik</strong>. Konfirmasi akan otomatis saat user lunas.
+              Memantau pembayaran setiap <strong>{FAST_INTERVAL / 1000} detik</strong> — status lunas otomatis tampil begitu user berhasil bayar.
             </p>
           </div>
         )}
@@ -563,12 +475,7 @@ export default function AdminBookings() {
               )}
               {notifications.filter(n => n.type === 'payment').length > 0 && (
                 <span className="text-green-600 dark:text-green-400 ml-2">
-                  · {notifications.filter(n => n.type === 'payment').length} pembayaran
-                </span>
-              )}
-              {notifications.filter(n => n.type === 'autoconfirm').length > 0 && (
-                <span className="text-emerald-600 dark:text-emerald-400 ml-2">
-                  · {notifications.filter(n => n.type === 'autoconfirm').length} auto-konfirmasi
+                  · {notifications.filter(n => n.type === 'payment').length} lunas
                 </span>
               )}
               {notifications.filter(n => n.type === 'checkin').length > 0 && (
@@ -637,22 +544,18 @@ export default function AdminBookings() {
                   </thead>
                   <tbody className="divide-y divide-gray-100 dark:divide-gray-800">
                     {pagedBookings.map((b, idx) => {
-                      const isNewBooking    = notifications.some(n => n.id.startsWith(`booking-${b.id}-`));
-                      const isNewlyPaid     = notifications.some(n => n.id.startsWith(`payment-${b.id}-`));
-                      const isAutoCheckin   = notifications.some(n => n.id.startsWith(`checkin-auto-${b.id}-`));
-                      const isAutoConfirmed = notifications.some(n => n.id.startsWith(`autoconfirm-${b.booking_code}-`));
-                      const isConfirming    = autoConfirmingRef.current.has(b.booking_code) && b.status === 'pending' && b.payment_status === 'paid';
-                      const rowNo           = (currentPage - 1) * PAGE_SIZE + idx + 1;
+                      const isNewBooking  = notifications.some(n => n.id.startsWith(`booking-${b.id}-`));
+                      const isNewlyPaid   = notifications.some(n => n.id.startsWith(`payment-${b.id}-`));
+                      const isAutoCheckin = notifications.some(n => n.id.startsWith(`checkin-auto-${b.id}-`));
+                      const rowNo         = (currentPage - 1) * PAGE_SIZE + idx + 1;
 
                       return (
                         <tr
                           key={b.id}
                           className={`transition-colors hover:bg-gray-50 dark:hover:bg-gray-800/50 ${
-                            isAutoCheckin   ? 'bg-purple-50/70 dark:bg-purple-900/10' :
-                            isAutoConfirmed ? 'bg-emerald-50/70 dark:bg-emerald-900/10' :
-                            isNewlyPaid     ? 'bg-green-50/70 dark:bg-green-900/10'   :
-                            isNewBooking    ? 'bg-blue-50/70 dark:bg-blue-900/10'     :
-                            isConfirming    ? 'bg-yellow-50/70 dark:bg-yellow-900/10' : ''
+                            isAutoCheckin ? 'bg-purple-50/70 dark:bg-purple-900/10' :
+                            isNewlyPaid   ? 'bg-green-50/70 dark:bg-green-900/10'   :
+                            isNewBooking  ? 'bg-blue-50/70 dark:bg-blue-900/10'     : ''
                           }`}
                         >
                           <td className="py-2.5 px-3 text-gray-400 text-xs">{rowNo}</td>
@@ -667,17 +570,7 @@ export default function AdminBookings() {
                               )}
                               {isNewlyPaid && (
                                 <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-green-100 text-green-700 dark:bg-green-900/60 dark:text-green-300 ring-1 ring-green-300 dark:ring-green-700">
-                                  PAID
-                                </span>
-                              )}
-                              {isConfirming && (
-                                <span className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-yellow-100 text-yellow-700 dark:bg-yellow-900/60 dark:text-yellow-300 ring-1 ring-yellow-300 dark:ring-yellow-700 animate-pulse">
-                                  <RefreshCw size={8} className="animate-spin" /> CONFIRMING
-                                </span>
-                              )}
-                              {isAutoConfirmed && !isConfirming && (
-                                <span className="inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-700 dark:bg-emerald-900/60 dark:text-emerald-300 ring-1 ring-emerald-300 dark:ring-emerald-700">
-                                  AUTO ✅
+                                  LUNAS ✓
                                 </span>
                               )}
                               {isAutoCheckin && (
@@ -701,12 +594,10 @@ export default function AdminBookings() {
 
                           <td className="py-2.5 px-3">
                             <div className="flex flex-col gap-1">
+                              {/* Tombol konfirmasi manual — hanya muncul kalau masih belum paid */}
                               {b.payment_status !== 'paid' && !['cancelled', 'completed', 'checked_in'].includes(b.status) && (
                                 <button
-                                  onClick={() => {
-                                    if (confirm(`Konfirmasi pembayaran ${b.booking_code}?`))
-                                      confirmPaymentMutation.mutate(b.booking_code);
-                                  }}
+                                  onClick={() => { if (confirm(`Konfirmasi pembayaran ${b.booking_code}?`)) confirmPaymentMutation.mutate(b.booking_code); }}
                                   disabled={confirmPaymentMutation.isPending}
                                   className="flex items-center gap-1 text-xs text-green-600 hover:text-green-800 px-2 py-1 rounded-lg hover:bg-green-50 disabled:opacity-50 font-medium transition-colors"
                                 >
@@ -715,10 +606,7 @@ export default function AdminBookings() {
                               )}
                               {!['cancelled', 'completed'].includes(b.status) && (
                                 <button
-                                  onClick={() => {
-                                    if (confirm('Batalkan booking ini?'))
-                                      cancelMutation.mutate(b.booking_code);
-                                  }}
+                                  onClick={() => { if (confirm('Batalkan booking ini?')) cancelMutation.mutate(b.booking_code); }}
                                   disabled={cancelMutation.isPending}
                                   className="flex items-center gap-1 text-xs text-red-500 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 disabled:opacity-50 transition-colors"
                                 >
@@ -733,12 +621,7 @@ export default function AdminBookings() {
                   </tbody>
                 </table>
               </div>
-              <Pagination
-                currentPage={currentPage}
-                totalPages={totalPages}
-                totalItems={totalItems}
-                onPageChange={setCurrentPage}
-              />
+              <Pagination currentPage={currentPage} totalPages={totalPages} totalItems={totalItems} onPageChange={setCurrentPage} />
             </>
           )}
         </div>

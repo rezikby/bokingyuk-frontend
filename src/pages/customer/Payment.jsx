@@ -20,14 +20,24 @@ export default function Payment() {
   const { data, isLoading } = useQuery({
     queryKey: ['booking', code],
     queryFn:  () => getBookingApi(code).then(r => r.data.data),
-    // Poll tiap 10 detik selama belum lunas
-    refetchInterval: (query) =>
-      query.state.data?.payment_status === 'unpaid' ? 10_000 : false,
+    // Poll agresif tiap 3 detik saat unpaid, berhenti kalau sudah paid
+    refetchInterval: (query) => {
+      const status = query.state.data?.payment_status;
+      return status === 'paid' ? false : 3_000;
+    },
+    refetchIntervalInBackground: false,
   });
+
+  // Saat payment_status berubah jadi paid, redirect ke BookingDetail agar QR tampil
+  useEffect(() => {
+    if (data?.payment_status === 'paid') {
+      navigate(`/bookings/${code}`, { replace: true });
+    }
+  }, [data?.payment_status, code, navigate]);
 
   const refreshMut = useMutation({
     mutationFn: () => refreshPaymentTokenApi(code),
-    onSuccess: (res) => {
+    onSuccess: () => {
       toast.success('Link pembayaran berhasil dimuat!');
       qc.invalidateQueries({ queryKey: ['booking', code] });
     },
@@ -47,10 +57,10 @@ export default function Payment() {
     }
     window.snap.pay(snapToken, {
       onSuccess: () => {
-        toast.success('Pembayaran berhasil!');
+        toast.success('Pembayaran berhasil! Memuat QR Code...');
+        // Invalidate dulu, biarkan polling redirect otomatis
         qc.invalidateQueries({ queryKey: ['booking', code] });
         qc.invalidateQueries({ queryKey: ['bookings'] });
-        navigate(`/bookings/${code}`);
       },
       onPending: () => {
         toast('Pembayaran pending. Selesaikan pembayaran kamu.', { icon: '⏳' });
@@ -71,13 +81,13 @@ export default function Payment() {
 
   const b = data;
 
+  // Jika sudah paid, redirect via useEffect — tampilkan loading sebentar
   if (b?.payment_status === 'paid') return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
-        <CheckCircle size={64} className="text-green-500 mx-auto mb-4" />
+        <CheckCircle size={64} className="text-green-500 mx-auto mb-4 animate-pulse" />
         <h2 className="text-xl font-bold mb-2">Pembayaran Berhasil!</h2>
-        <p className="text-gray-500 mb-6">Booking kamu sudah dikonfirmasi.</p>
-        <Button onClick={() => navigate(`/bookings/${code}`)}>Lihat Detail Booking</Button>
+        <p className="text-gray-500">Memuat QR Code check-in kamu...</p>
       </div>
     </div>
   );
@@ -153,6 +163,15 @@ export default function Payment() {
             </p>
           )}
 
+          {/* Info polling aktif */}
+          <div className="flex items-center gap-2 text-xs text-gray-400">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inset-0 rounded-full bg-green-400 opacity-75 animate-ping" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
+            </span>
+            Halaman akan otomatis update setelah pembayaran berhasil
+          </div>
+
           {/* Tombol bayar — ada snap_token */}
           {b?.payment?.snap_token ? (
             <Button
@@ -171,7 +190,7 @@ export default function Payment() {
               </Button>
             </a>
 
-          /* Tidak ada token — tampilkan penjelasan + tombol retry */
+          /* Tidak ada token */
           ) : (
             <div className="space-y-3">
               <div className="flex items-start gap-3 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-xl p-4">
@@ -191,7 +210,6 @@ export default function Payment() {
                 </div>
               </div>
 
-              {/* Tampilkan pesan error dari server jika ada */}
               {refreshMut.isError && (
                 <div className="flex items-start gap-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4">
                   <XCircle size={18} className="text-red-500 mt-0.5 shrink-0" />
