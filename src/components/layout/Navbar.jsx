@@ -134,6 +134,7 @@ export default function Navbar() {
 
                 {[
                   { to: '/profile',         icon: User,       label: 'Profil Saya' },
+                  // { to: '/payment-history', icon: CreditCard, label: 'Riwayat Pembayaran' },
                   { to: '/503', icon: CreditCard, label: 'Riwayat Pembayaran' },
                 ].map(({ to, icon: Icon, label }) => (
                   <Link key={to} to={to} onClick={closeAll}

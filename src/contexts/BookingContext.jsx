@@ -2,6 +2,7 @@ import { createContext, useContext, useState, useRef, useEffect, useCallback } f
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { adminGetBookingsApi, adminSyncPaymentsApi } from '../api/booking';
 import { adminGetNotificationsApi } from '../api/notification';
+import { useAuth } from './AuthContext'; // ← TAMBAH: cek role sebelum polling
 
 // ── AudioContext singleton ─────────────────────────────────────────────────────
 let _audioCtx = null;
@@ -61,13 +62,34 @@ function normalizeList(raw) {
   return [];
 }
 
+function parseNotifResponse(rawNotifData) {
+  const unreadCount =
+    rawNotifData?.unread_count ??
+    rawNotifData?.data?.unread_count ??
+    0;
+
+  const notifList =
+    rawNotifData?.notifications?.data ??
+    rawNotifData?.data?.notifications?.data ??
+    rawNotifData?.notifications ??
+    [];
+
+  return { unreadCount, notifList: Array.isArray(notifList) ? notifList : [] };
+}
+
 // ── Context ───────────────────────────────────────────────────────────────────
 export const BookingContext = createContext(null);
 
 export function BookingProvider({ children }) {
   const queryClient = useQueryClient();
 
+  // FIX: Ambil token & role dari AuthContext
+  // Polling hanya boleh jalan kalau user sudah login sebagai admin/super_admin
+  const { token, user } = useAuth();
+  const isAdmin = token && ['admin', 'super_admin'].includes(user?.role);
+
   const [unreadCount,  setUnreadCount]  = useState(0);
+  const [notifUnread,  setNotifUnread]  = useState(0);
   const [newEvents,    setNewEvents]    = useState([]);
   const [soundEnabled, setSoundEnabled] = useState(true);
 
@@ -86,31 +108,35 @@ export function BookingProvider({ children }) {
     });
   }, []);
 
-  // ── Polling booking list (untuk deteksi booking baru & update badge) ───────
+  // ── Polling booking list — hanya jalan kalau isAdmin ──────────────────────
   const { data: rawData } = useQuery({
     queryKey: ['admin-bookings-global'],
     queryFn:  () => adminGetBookingsApi({}).then(r => r.data),
     refetchInterval: 4_000,
     refetchIntervalInBackground: true,
+    enabled: !!isAdmin, // ← KUNCI: tidak jalan kalau bukan admin / belum login
   });
 
-  // ── Polling notifikasi admin dari server ──────────────────────────────────
+  // ── Polling notifikasi admin — hanya jalan kalau isAdmin ──────────────────
   const { data: rawNotifData } = useQuery({
     queryKey: ['admin-notifications-global'],
     queryFn:  () => adminGetNotificationsApi({ per_page: 20 }).then(r => r.data?.data),
     refetchInterval: 4_000,
     refetchIntervalInBackground: true,
+    retry: 1,
+    enabled: !!isAdmin, // ← KUNCI
   });
 
-  // ── syncPayments: panggil backend untuk cek Midtrans & auto-confirm ───────
+  // ── syncPayments: cek Midtrans & auto-confirm ─────────────────────────────
   const runSync = useCallback(async () => {
+    // FIX: jangan sync kalau bukan admin atau belum login
+    if (!isAdmin) return;
     if (isSyncingRef.current) return;
     isSyncingRef.current = true;
     try {
       const res = await adminSyncPaymentsApi();
       const confirmed = res.data?.data?.confirmed ?? [];
       if (confirmed.length > 0) {
-        // Ada yang baru dikonfirmasi — invalidate semua query booking
         queryClient.invalidateQueries({ queryKey: ['admin-bookings'] });
         queryClient.invalidateQueries({ queryKey: ['admin-bookings-global'] });
         queryClient.invalidateQueries({ queryKey: ['admin-notifications-global'] });
@@ -123,34 +149,68 @@ export function BookingProvider({ children }) {
     } finally {
       isSyncingRef.current = false;
     }
-  }, [queryClient]);
+  }, [queryClient, isAdmin]); // ← isAdmin masuk dependency
 
-  // Jalankan sync setiap 5 detik
+  // Jalankan sync setiap 5 detik — hanya kalau isAdmin
   useEffect(() => {
-    // Langsung jalankan sekali saat mount
+    if (!isAdmin) {
+      clearInterval(syncIntervalRef.current);
+      return;
+    }
     runSync();
     syncIntervalRef.current = setInterval(runSync, 5_000);
     return () => clearInterval(syncIntervalRef.current);
-  }, [runSync]);
+  }, [runSync, isAdmin]); // ← restart kalau isAdmin berubah (login/logout)
+
+  // ── Update unreadCount dari jumlah booking pending ────────────────────────
+  useEffect(() => {
+    const bookings = normalizeList(rawData);
+    if (!bookings.length) return;
+
+    const pendingCount = bookings.filter(b =>
+      b.payment_status !== 'paid' &&
+      !['cancelled', 'completed', 'checked_in'].includes(b.status)
+    ).length;
+
+    if (isFirstFetchRef.current) {
+      isFirstFetchRef.current = false;
+      prevBookingsRef.current = bookings.map(b => ({ id: b.id, status: b.status, payment_status: b.payment_status }));
+      setUnreadCount(pendingCount);
+      return;
+    }
+    if (!prevBookingsRef.current) {
+      prevBookingsRef.current = bookings.map(b => ({ id: b.id, status: b.status, payment_status: b.payment_status }));
+      setUnreadCount(pendingCount);
+      return;
+    }
+
+    const prevIds = new Set(prevBookingsRef.current.map(b => b.id));
+    const newBookings = bookings.filter(b => !prevIds.has(b.id));
+
+    if (newBookings.length > 0 && soundEnabledRef.current) {
+      playSound('booking');
+    }
+
+    setUnreadCount(pendingCount);
+    prevBookingsRef.current = bookings.map(b => ({ id: b.id, status: b.status, payment_status: b.payment_status }));
+  }, [rawData]);
 
   // ── Proses notifikasi baru dari server ────────────────────────────────────
   useEffect(() => {
-    const notifList = rawNotifData?.notifications?.data || [];
-    const serverUnread = rawNotifData?.unread_count || 0;
+    if (rawNotifData === undefined) return;
+
+    const { unreadCount: serverUnread, notifList } = parseNotifResponse(rawNotifData);
+
+    setNotifUnread(serverUnread);
 
     if (isFirstNotifRef.current) {
       isFirstNotifRef.current = false;
       notifList.forEach(n => shownNotifIdsRef.current.add(n.id));
-      setUnreadCount(serverUnread);
       return;
     }
 
     const freshNotifs = notifList.filter(n => !shownNotifIdsRef.current.has(n.id));
-    if (!freshNotifs.length) {
-      // Update count dari server meski tidak ada notif baru
-      setUnreadCount(serverUnread);
-      return;
-    }
+    if (!freshNotifs.length) return;
 
     freshNotifs.forEach(n => shownNotifIdsRef.current.add(n.id));
 
@@ -163,7 +223,6 @@ export function BookingProvider({ children }) {
       bookingId: n.data?.booking_id,
     }));
 
-    setUnreadCount(serverUnread);
     setNewEvents(prev => [...newEvts, ...prev]);
 
     if (soundEnabledRef.current) {
@@ -177,24 +236,6 @@ export function BookingProvider({ children }) {
     }
   }, [rawNotifData]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // ── Deteksi booking baru lewat diff (backup — notif sudah dari server) ────
-  useEffect(() => {
-    const bookings = normalizeList(rawData);
-    if (!bookings.length) return;
-
-    if (isFirstFetchRef.current) {
-      isFirstFetchRef.current = false;
-      prevBookingsRef.current = bookings.map(b => ({ id: b.id, status: b.status, payment_status: b.payment_status }));
-      return;
-    }
-    if (!prevBookingsRef.current) {
-      prevBookingsRef.current = bookings.map(b => ({ id: b.id, status: b.status, payment_status: b.payment_status }));
-      return;
-    }
-
-    prevBookingsRef.current = bookings.map(b => ({ id: b.id, status: b.status, payment_status: b.payment_status }));
-  }, [rawData]);
-
   const clearUnread   = useCallback(() => setUnreadCount(0), []);
   const consumeEvents = useCallback(() => setNewEvents([]), []);
   const removeNotif   = useCallback((id) => setNewEvents(prev => prev.filter(n => n.id !== id)), []);
@@ -202,6 +243,7 @@ export function BookingProvider({ children }) {
   return (
     <BookingContext.Provider value={{
       unreadCount, clearUnread,
+      notifUnread,
       newEvents, consumeEvents,
       soundEnabled, toggleSound: handleToggleSound,
       notifications: newEvents,
@@ -216,6 +258,7 @@ export function useBooking() {
   const ctx = useContext(BookingContext);
   if (!ctx) return {
     unreadCount: 0, clearUnread: () => {},
+    notifUnread: 0,
     newEvents: [], consumeEvents: () => {},
     soundEnabled: true, toggleSound: () => {},
     notifications: [], removeNotif: () => {},

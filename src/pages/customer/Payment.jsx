@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { getBookingApi, refreshPaymentTokenApi } from '../../api/booking';
+import { checkPaymentStatusApi, refreshPaymentTokenApi } from '../../api/booking';
 import Navbar from '../../components/layout/Navbar';
 import Button from '../../components/ui/Button';
 import { Skeleton } from '../../components/ui/Skeleton';
@@ -17,10 +17,12 @@ export default function Payment() {
   const navigate  = useNavigate();
   const qc        = useQueryClient();
 
+  // PERBAIKAN: pakai checkPaymentStatusApi bukan getBookingApi
+  // Endpoint ini langsung cek ke Midtrans & auto-confirm jika sudah lunas
+  // Tidak perlu admin online — customer sendiri yang trigger konfirmasi
   const { data, isLoading } = useQuery({
-    queryKey: ['booking', code],
-    queryFn:  () => getBookingApi(code).then(r => r.data.data),
-    // Poll agresif tiap 3 detik saat unpaid, berhenti kalau sudah paid
+    queryKey: ['booking-payment-check', code],
+    queryFn:  () => checkPaymentStatusApi(code).then(r => r.data.data),
     refetchInterval: (query) => {
       const status = query.state.data?.payment_status;
       return status === 'paid' ? false : 3_000;
@@ -28,18 +30,21 @@ export default function Payment() {
     refetchIntervalInBackground: false,
   });
 
-  // Saat payment_status berubah jadi paid, redirect ke BookingDetail agar QR tampil
+  // Saat payment_status berubah jadi paid, invalidate cache lalu redirect ke BookingDetail
   useEffect(() => {
     if (data?.payment_status === 'paid') {
+      // Invalidate semua query yang relevan supaya data segar di halaman berikutnya
+      qc.invalidateQueries({ queryKey: ['booking', code] });
+      qc.invalidateQueries({ queryKey: ['bookings'] });
       navigate(`/bookings/${code}`, { replace: true });
     }
-  }, [data?.payment_status, code, navigate]);
+  }, [data?.payment_status, code, navigate, qc]);
 
   const refreshMut = useMutation({
     mutationFn: () => refreshPaymentTokenApi(code),
     onSuccess: () => {
       toast.success('Link pembayaran berhasil dimuat!');
-      qc.invalidateQueries({ queryKey: ['booking', code] });
+      qc.invalidateQueries({ queryKey: ['booking-payment-check', code] });
     },
     onError: (e) => {
       const msg = e.response?.data?.message || 'Gagal memuat link pembayaran';
@@ -57,17 +62,18 @@ export default function Payment() {
     }
     window.snap.pay(snapToken, {
       onSuccess: () => {
-        toast.success('Pembayaran berhasil! Memuat QR Code...');
-        // Invalidate dulu, biarkan polling redirect otomatis
+        toast.success('Pembayaran berhasil! Mengonfirmasi...');
+        // Langsung invalidate → polling akan detect paid & redirect
+        qc.invalidateQueries({ queryKey: ['booking-payment-check', code] });
         qc.invalidateQueries({ queryKey: ['booking', code] });
         qc.invalidateQueries({ queryKey: ['bookings'] });
       },
       onPending: () => {
         toast('Pembayaran pending. Selesaikan pembayaran kamu.', { icon: '⏳' });
-        qc.invalidateQueries({ queryKey: ['booking', code] });
+        qc.invalidateQueries({ queryKey: ['booking-payment-check', code] });
       },
       onError:  () => toast.error('Pembayaran gagal. Silakan coba lagi.'),
-      onClose:  () => qc.invalidateQueries({ queryKey: ['booking', code] }),
+      onClose:  () => qc.invalidateQueries({ queryKey: ['booking-payment-check', code] }),
     });
   };
 
@@ -81,7 +87,6 @@ export default function Payment() {
 
   const b = data;
 
-  // Jika sudah paid, redirect via useEffect — tampilkan loading sebentar
   if (b?.payment_status === 'paid') return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="text-center">
@@ -169,7 +174,7 @@ export default function Payment() {
               <span className="absolute inset-0 rounded-full bg-green-400 opacity-75 animate-ping" />
               <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-green-500" />
             </span>
-            Halaman akan otomatis update setelah pembayaran berhasil
+            Halaman akan otomatis terkonfirmasi setelah pembayaran berhasil
           </div>
 
           {/* Tombol bayar — ada snap_token */}

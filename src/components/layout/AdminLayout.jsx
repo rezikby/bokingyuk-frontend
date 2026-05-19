@@ -5,7 +5,7 @@ import { useTheme } from '../../contexts/ThemeContext';
 import {
   LayoutDashboard, Building2, CalendarDays, QrCode,
   BarChart2, LogOut, Calendar, Menu, ChevronLeft,
-  Wrench, Download, Star, Sun, Moon,
+  Wrench, Download, Star, Sun, Moon, Bell,
 } from 'lucide-react';
 import { BookingProvider, useBooking } from '../../contexts/BookingContext';
 import { NotificationStack } from '../ui/NotificationStack';
@@ -38,6 +38,11 @@ function NavLink({ to, icon: Icon, label, collapsed, onClick }) {
   );
 }
 
+/**
+ * FIX #3: BookingNavLink
+ * Badge angka merah di icon dan di label "Booking Saya"
+ * unreadCount = jumlah booking pending/belum lunas dari BookingContext
+ */
 function BookingNavLink({ collapsed, onClick }) {
   const loc             = useLocation();
   const active          = loc.pathname === '/admin/bookings';
@@ -51,6 +56,7 @@ function BookingNavLink({ collapsed, onClick }) {
     >
       <span className="relative shrink-0">
         <CalendarDays size={17} />
+        {/* Badge angka di icon — terlihat bahkan saat sidebar collapsed */}
         {unreadCount > 0 && (
           <span className="absolute -top-1.5 -right-1.5 flex items-center justify-center min-w-[14px] h-3.5 px-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none ring-2 ring-slate-900">
             {unreadCount > 99 ? '99+' : unreadCount}
@@ -60,6 +66,7 @@ function BookingNavLink({ collapsed, onClick }) {
       {!collapsed && (
         <span className="flex-1 flex items-center justify-between">
           Booking Saya
+          {/* Badge angka di kanan label — terlihat saat sidebar terbuka */}
           {unreadCount > 0 && (
             <span className="flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full bg-red-500 text-white text-[10px] font-bold leading-none">
               {unreadCount > 99 ? '99+' : unreadCount}
@@ -75,7 +82,7 @@ function LayoutInner({ children }) {
   const { logout, user }                            = useAuth();
   const { dark, toggle }                            = useTheme();
   const navigate                                    = useNavigate();
-  const { clearUnread, notifications, removeNotif } = useBooking();
+  const { clearUnread, notifications, removeNotif, unreadCount, notifUnread } = useBooking();
 
   const [collapsed,  setCollapsed]  = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -88,7 +95,10 @@ function LayoutInner({ children }) {
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-[#0F172A]">
       {mobileOpen && (
-        <div className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setMobileOpen(false)} />
+        <div
+          className="fixed inset-0 z-30 bg-black/50 backdrop-blur-sm md:hidden"
+          onClick={() => setMobileOpen(false)}
+        />
       )}
 
       <aside className={`
@@ -124,14 +134,16 @@ function LayoutInner({ children }) {
 
         {/* Nav */}
         <nav className="flex-1 py-3 space-y-0.5 px-2 overflow-y-auto">
-          {/* Label section */}
           {!collapsed && (
             <p className="px-3 text-[10px] font-semibold text-slate-500 uppercase tracking-widest mb-1">Menu</p>
           )}
           {navItemsBefore.map(({ to, icon, label }) => (
             <NavLink key={to} to={to} icon={icon} label={label} collapsed={collapsed} onClick={() => setMobileOpen(false)} />
           ))}
+
+          {/* FIX #3: BookingNavLink dengan badge dari unreadCount */}
           <BookingNavLink collapsed={collapsed} onClick={() => { clearUnread(); setMobileOpen(false); }} />
+
           {navItemsAfter.map(({ to, icon, label }) => (
             <NavLink key={to} to={to} icon={icon} label={label} collapsed={collapsed} onClick={() => setMobileOpen(false)} />
           ))}
@@ -172,21 +184,44 @@ function LayoutInner({ children }) {
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
         {/* Mobile header */}
         <header className="flex items-center gap-3 px-4 h-14 bg-white dark:bg-[#111827] border-b border-slate-200 dark:border-slate-800 md:hidden">
+          {/* FIX #3: tombol menu dengan badge di mobile */}
           <button
             onClick={() => setMobileOpen(!mobileOpen)}
-            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
+            className="relative p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-600 dark:text-slate-400"
           >
             <Menu size={20} />
+            {/* Badge orange dot di tombol menu jika ada booking pending */}
+            {unreadCount > 0 && (
+              <span className="absolute top-1.5 right-1.5 min-w-[14px] h-3.5 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-0.5">
+                {unreadCount > 9 ? '9+' : unreadCount}
+              </span>
+            )}
           </button>
+
           <div className="flex items-center gap-2 font-bold text-slate-800 dark:text-slate-100">
             <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center">
               <Calendar size={13} className="text-white" />
             </div>
             BokinYuk Admin
           </div>
-          <button onClick={toggle} className="ml-auto p-2 text-slate-500 dark:text-slate-400">
-            {dark ? <Sun size={17} /> : <Moon size={17} />}
-          </button>
+
+          <div className="ml-auto flex items-center gap-1">
+            {/* FIX #3: Bell icon dengan badge notif unread di mobile header */}
+            <Link
+              to="/admin/notifications"
+              className="relative p-2 text-slate-500 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg"
+            >
+              <Bell size={18} />
+              {notifUnread > 0 && (
+                <span className="absolute top-1 right-1 min-w-[14px] h-3.5 text-[9px] font-bold bg-red-500 text-white rounded-full flex items-center justify-center px-0.5">
+                  {notifUnread > 9 ? '9+' : notifUnread}
+                </span>
+              )}
+            </Link>
+            <button onClick={toggle} className="p-2 text-slate-500 dark:text-slate-400">
+              {dark ? <Sun size={17} /> : <Moon size={17} />}
+            </button>
+          </div>
         </header>
 
         <main className="flex-1 overflow-auto p-4 md:p-6 bg-slate-50 dark:bg-[#0F172A]">

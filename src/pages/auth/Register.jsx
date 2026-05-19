@@ -3,12 +3,12 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../../contexts/AuthContext';
-import { useTheme } from '../../contexts/ThemeContext'; // FIX #5
+import { useTheme } from '../../contexts/ThemeContext';
 import Button from '../../components/ui/Button';
 import Input from '../../components/ui/Input';
 import { googleRedirectApi } from '../../api/auth';
 import { useState } from 'react';
-import { Sun, Moon } from 'lucide-react'; // FIX #5
+import { Sun, Moon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 const schema = z.object({
@@ -44,7 +44,7 @@ function Spinner() {
 
 export default function Register() {
   const { register: regAuth, loading } = useAuth();
-  const { dark, toggle } = useTheme(); // FIX #5
+  const { dark, toggle } = useTheme();
   const navigate = useNavigate();
   const [googleLoading, setGoogleLoading] = useState(false);
   const { register, handleSubmit, setError, formState: { errors } } = useForm({ resolver: zodResolver(schema) });
@@ -71,37 +71,21 @@ export default function Register() {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap');
 
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         .reg-root {
           font-family: 'Plus Jakarta Sans', sans-serif;
           min-height: 100vh;
           display: flex;
-          align-items: center;
-          justify-content: center;
-          padding: 1rem 1.25rem;
+          align-items: stretch;
           background: #F8F9FC;
-          position: relative;
           transition: background 0.3s;
+          position: relative;
+          overflow: hidden;
         }
-        /* FIX #5: dark mode background */
-        .reg-root.dark-mode {
-          background: #0D1117;
-        }
-        .reg-root::before {
-          content: '';
-          position: fixed;
-          inset: 0;
-          background:
-            radial-gradient(ellipse 60% 50% at 10% 10%, rgba(99,102,241,0.08) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 60% at 90% 90%, rgba(168,85,247,0.06) 0%, transparent 70%);
-          pointer-events: none;
-        }
-        .dark-mode.reg-root::before {
-          background:
-            radial-gradient(ellipse 60% 50% at 10% 10%, rgba(99,102,241,0.12) 0%, transparent 70%),
-            radial-gradient(ellipse 50% 60% at 90% 90%, rgba(168,85,247,0.09) 0%, transparent 70%);
-        }
+        .reg-root.dark-mode { background: #0D1117; }
 
-        /* FIX #5: theme toggle button */
+        /* ── Theme toggle ── */
         .theme-btn {
           position: fixed;
           top: 1.25rem;
@@ -118,7 +102,7 @@ export default function Register() {
           cursor: pointer;
           box-shadow: 0 1px 4px rgba(0,0,0,0.06);
           transition: background 0.2s, color 0.2s, border-color 0.2s;
-          z-index: 10;
+          z-index: 20;
         }
         .dark-mode .theme-btn {
           background: #161B22;
@@ -128,31 +112,106 @@ export default function Register() {
         .theme-btn:hover { background: #F1F5F9; }
         .dark-mode .theme-btn:hover { background: #1E2530; }
 
-        .reg-card {
-          width: 100%;
-          max-width: 480px;
-          background: #fff;
-          border-radius: 1.125rem;
-          border: 1px solid rgba(0,0,0,0.07);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 8px 32px rgba(0,0,0,0.06);
-          padding: 1.375rem 1.625rem 1.25rem;
+        /* ── LEFT PANEL ── */
+        .reg-left {
+          width: 50%;
+          min-height: 100vh;
           position: relative;
-          z-index: 1;
-          transition: background 0.3s, border-color 0.3s;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          overflow: hidden;
+          background: linear-gradient(145deg, #EEF2FF 0%, #E0E7FF 40%, #EDE9FE 80%, #F0F4FF 100%);
+          flex-shrink: 0;
         }
-        /* FIX #5: dark card */
-        .dark-mode .reg-card {
-          background: #161B22;
-          border-color: rgba(255,255,255,0.07);
-          box-shadow: 0 1px 3px rgba(0,0,0,0.2), 0 8px 32px rgba(0,0,0,0.3);
+        .dark-mode .reg-left {
+          background: linear-gradient(145deg, #13111C 0%, #1A1628 40%, #160F2C 80%, #0F1220 100%);
+        }
+        .reg-left::before {
+          content: '';
+          position: absolute;
+          width: 420px;
+          height: 420px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(99,102,241,0.13) 0%, transparent 70%);
+          top: 50%;
+          left: 50%;
+          transform: translate(-50%, -50%);
+          pointer-events: none;
+        }
+        .reg-left::after {
+          content: '';
+          position: absolute;
+          width: 300px;
+          height: 300px;
+          border-radius: 50%;
+          background: radial-gradient(circle, rgba(168,85,247,0.09) 0%, transparent 70%);
+          bottom: 10%;
+          right: 5%;
+          pointer-events: none;
         }
 
+        .hero-image-wrap {
+          position: absolute;
+          inset: 0;
+          z-index: 1;
+        }
+        .hero-image-wrap img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+        }
+
+        /* ── PANEL DIVIDER ── */
+        .panel-divider {
+          width: 1px;
+          background: linear-gradient(to bottom, transparent, rgba(99,102,241,0.15) 30%, rgba(99,102,241,0.15) 70%, transparent);
+          align-self: stretch;
+          flex-shrink: 0;
+        }
+        .dark-mode .panel-divider {
+          background: linear-gradient(to bottom, transparent, rgba(99,102,241,0.2) 30%, rgba(99,102,241,0.2) 70%, transparent);
+        }
+
+        /* ── RIGHT PANEL ── */
+        .reg-right {
+          width: 50%;
+          min-height: 100vh;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 2rem 3rem;
+          position: relative;
+          background: #fff;
+          flex-shrink: 0;
+        }
+        .dark-mode .reg-right { background: #0D1117; }
+        .reg-right::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse 50% 40% at 80% 20%, rgba(99,102,241,0.04) 0%, transparent 70%),
+            radial-gradient(ellipse 40% 50% at 20% 80%, rgba(168,85,247,0.03) 0%, transparent 70%);
+          pointer-events: none;
+        }
+
+        /* ── Form container ── */
+        .reg-form-container {
+          width: 100%;
+          max-width: 400px;
+          position: relative;
+          z-index: 1;
+        }
+
+        /* ── Brand ── */
         .reg-brand {
           display: flex;
           align-items: center;
           gap: 0.75rem;
-          margin-bottom: 1.125rem;
-          padding-bottom: 1rem;
+          margin-bottom: 1.25rem;
+          padding-bottom: 1.125rem;
           border-bottom: 1px solid #F1F5F9;
           transition: border-color 0.3s;
         }
@@ -164,7 +223,7 @@ export default function Register() {
           gap: 0.375rem;
           background: linear-gradient(135deg, #6366F1, #818CF8);
           border-radius: 0.5rem;
-          padding: 0.325rem 0.625rem;
+          padding: 0.35rem 0.7rem;
           flex-shrink: 0;
         }
         .reg-badge-text {
@@ -174,7 +233,7 @@ export default function Register() {
           letter-spacing: 0.03em;
         }
         .reg-title {
-          font-size: 1rem;
+          font-size: 1.05rem;
           font-weight: 700;
           color: #0F172A;
           margin: 0 0 0.1rem;
@@ -187,8 +246,8 @@ export default function Register() {
           color: #94A3B8;
           margin: 0;
         }
-        .dark-mode .reg-sub { color: #64748B; }
 
+        /* ── Section labels ── */
         .section-label {
           font-size: 0.5625rem;
           font-weight: 700;
@@ -199,17 +258,20 @@ export default function Register() {
         }
         .dark-mode .section-label { color: #374151; }
 
+        /* ── Grid ── */
         .two-col {
           display: grid;
           grid-template-columns: 1fr 1fr;
           gap: 0.5rem;
         }
 
+        /* ── Divider ── */
         .divider { display: flex; align-items: center; gap: 0.5rem; }
         .divider-line { flex: 1; height: 1px; background: #E2E8F0; transition: background 0.3s; }
         .dark-mode .divider-line { background: #21262D; }
-        .divider-text { font-size: 0.625rem; color: #94A3B8; font-weight: 500; }
+        .divider-text { font-size: 0.625rem; color: #94A3B8; font-weight: 500; white-space: nowrap; }
 
+        /* ── Google button ── */
         .google-btn {
           width: 100%;
           display: flex;
@@ -229,96 +291,127 @@ export default function Register() {
           box-shadow: 0 1px 2px rgba(0,0,0,0.04);
         }
         .dark-mode .google-btn {
-          background: #161B22;
+          background: #0D1117;
           border-color: rgba(255,255,255,0.1);
           color: #94A3B8;
         }
         .google-btn:hover:not(:disabled) { background: #F8FAFC; border-color: #CBD5E1; }
-        .dark-mode .google-btn:hover:not(:disabled) { background: #1E2530; border-color: rgba(255,255,255,0.15); }
+        .dark-mode .google-btn:hover:not(:disabled) { background: #161B22; border-color: rgba(255,255,255,0.15); }
         .google-btn:disabled { opacity: 0.55; cursor: not-allowed; }
 
+        /* ── Footer ── */
         .footer-text { text-align: center; font-size: 0.6875rem; color: #64748B; margin: 0; }
         .footer-link { color: #6366F1; font-weight: 600; text-decoration: none; }
+        .dark-mode .footer-link { color: #818CF8; }
         .footer-link:hover { text-decoration: underline; }
 
+        /* ── Spacing ── */
         .stack    { display: flex; flex-direction: column; gap: 0.5rem; }
         .stack-sm { display: flex; flex-direction: column; gap: 0.4rem; }
         .sep { height: 1px; background: #F1F5F9; margin: 0.25rem 0; transition: background 0.3s; }
         .dark-mode .sep { background: #21262D; }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+          .reg-root { flex-direction: column; }
+          .reg-left { display: none; }
+          .panel-divider { display: none; }
+          .reg-right {
+            width: 100%;
+            min-height: 100vh;
+            padding: 2.5rem 1.5rem 3rem;
+          }
+        }
       `}</style>
 
-      {/* FIX #5: tambah class dark-mode jika dark aktif */}
       <div className={`reg-root${dark ? ' dark-mode' : ''}`}>
 
-        {/* FIX #5: Tombol toggle dark mode */}
-        <button onClick={toggle} className="theme-btn" title={dark ? 'Mode Terang' : 'Mode Gelap'}>
+        {/* Theme toggle */}
+        <button onClick={toggle} className="theme-btn" aria-label="Toggle theme">
           {dark ? <Sun size={15} /> : <Moon size={15} />}
         </button>
 
-        <div className="reg-card">
-
-          {/* Brand — horizontal compact */}
-          <div className="reg-brand">
-            <div className="reg-badge">
-              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <rect x="2" y="3" width="20" height="18" rx="2"/>
-                <line x1="12" y1="3" x2="12" y2="21"/>
-                <path d="M2 12h20"/>
-                <path d="M7 3v4M17 3v4M7 17v4M17 17v4"/>
-              </svg>
-              <span className="reg-badge-text">BokingYuk</span>
-            </div>
-            <div>
-              <h1 className="reg-title">Buat akun baru</h1>
-              <p className="reg-sub">Daftar gratis dan mulai booking lapangan</p>
-            </div>
+        {/* ── LEFT PANEL: Illustration ── */}
+        <div className="reg-left">
+          <div className="hero-image-wrap">
+            <img src="/img/gambar_kiri.svg" alt="BokingYuk Sports" />
           </div>
+        </div>
 
-          <div className="stack">
-            <form onSubmit={handleSubmit(onSubmit)}>
-              <div className="stack-sm">
+        {/* Vertical divider */}
+        <div className="panel-divider" />
 
-                <p className="section-label">Informasi Akun</p>
-                <Input label="Nama Lengkap" placeholder="Nama Anda" error={errors.name?.message} {...register('name')} />
-                <Input label="Email" type="email" placeholder="nama@email.com" error={errors.email?.message} {...register('email')} />
+        {/* ── RIGHT PANEL: Form ── */}
+        <div className="reg-right">
+          <div className="reg-form-container">
 
-                <div className="sep" />
-
-                <p className="section-label">Kontak</p>
-                <div className="two-col">
-                  <Input label="No. Telepon" placeholder="08xx" error={errors.phone?.message} {...register('phone')} />
-                  <Input label="No. WhatsApp" placeholder="08xx (opsional)" error={errors.whatsapp_number?.message} {...register('whatsapp_number')} />
-                </div>
-
-                <div className="sep" />
-
-                <p className="section-label">Keamanan</p>
-                <div className="two-col">
-                  <Input label="Password" type="password" placeholder="Min. 8 karakter" error={errors.password?.message} {...register('password')} />
-                  <Input label="Konfirmasi" type="password" placeholder="Ulangi password" error={errors.password_confirmation?.message} {...register('password_confirmation')} />
-                </div>
-
-                <Button type="submit" className="w-full" loading={loading} size="md">
-                  Buat Akun
-                </Button>
+            {/* Brand */}
+            <div className="reg-brand">
+              <div className="reg-badge">
+                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <rect x="2" y="3" width="20" height="18" rx="2"/>
+                  <line x1="12" y1="3" x2="12" y2="21"/>
+                  <path d="M2 12h20"/>
+                  <path d="M7 3v4M17 3v4M7 17v4M17 17v4"/>
+                </svg>
+                <span className="reg-badge-text">BokingYuk</span>
               </div>
-            </form>
-
-            <div className="divider">
-              <div className="divider-line" />
-              <span className="divider-text">atau daftar dengan</span>
-              <div className="divider-line" />
+              <div>
+                <h1 className="reg-title">Buat akun baru</h1>
+                <p className="reg-sub">Daftar gratis dan mulai booking lapangan</p>
+              </div>
             </div>
 
-            <button onClick={handleGoogleLogin} disabled={googleLoading || loading} className="google-btn">
-              {googleLoading ? <Spinner /> : <GoogleIcon />}
-              {googleLoading ? 'Menghubungkan...' : 'Google'}
-            </button>
+            {/* Form + extras */}
+            <div className="stack">
+              <form onSubmit={handleSubmit(onSubmit)}>
+                <div className="stack-sm">
 
-            <p className="footer-text">
-              Sudah punya akun?{' '}
-              <Link to="/login" className="footer-link">Masuk di sini</Link>
-            </p>
+                  <p className="section-label">Informasi Akun</p>
+                  <Input label="Nama Lengkap" placeholder="Nama Anda" error={errors.name?.message} {...register('name')} />
+                  <Input label="Email" type="email" placeholder="nama@email.com" error={errors.email?.message} {...register('email')} />
+
+                  <div className="sep" />
+
+                  <p className="section-label">Kontak</p>
+                  <div className="two-col">
+                    <Input label="No. Telepon" placeholder="08xx" error={errors.phone?.message} {...register('phone')} />
+                    <Input label="No. WhatsApp" placeholder="08xx (opsional)" error={errors.whatsapp_number?.message} {...register('whatsapp_number')} />
+                  </div>
+
+                  <div className="sep" />
+
+                  <p className="section-label">Keamanan</p>
+                  <div className="two-col">
+                    <Input label="Password" type="password" placeholder="Min. 8 karakter" error={errors.password?.message} {...register('password')} />
+                    <Input label="Konfirmasi" type="password" placeholder="Ulangi password" error={errors.password_confirmation?.message} {...register('password_confirmation')} />
+                  </div>
+
+                  <Button type="submit" className="w-full" loading={loading} size="md">
+                    Buat Akun
+                  </Button>
+                </div>
+              </form>
+
+              {/* Divider */}
+              <div className="divider">
+                <div className="divider-line" />
+                <span className="divider-text">atau daftar dengan</span>
+                <div className="divider-line" />
+              </div>
+
+              {/* Google */}
+              <button onClick={handleGoogleLogin} disabled={googleLoading || loading} className="google-btn">
+                {googleLoading ? <Spinner /> : <GoogleIcon />}
+                {googleLoading ? 'Menghubungkan...' : 'Google'}
+              </button>
+
+              {/* Footer */}
+              <p className="footer-text">
+                Sudah punya akun?{' '}
+                <Link to="/login" className="footer-link">Masuk di sini</Link>
+              </p>
+            </div>
           </div>
         </div>
       </div>

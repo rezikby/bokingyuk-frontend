@@ -1,4 +1,4 @@
-// Riwayat Pembayaran (Customer) — auto-refresh + search fix
+// Riwayat Pembayaran (Customer) — auto-refresh + fix response parsing
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { getPaymentHistoryApi } from '../../api/paymentHistory';
@@ -12,7 +12,6 @@ export default function PaymentHistory() {
   const [page, setPage]     = useState(1);
   const [search, setSearch] = useState('');
 
-  // FIX #4: tambah refetchInterval 15 detik agar data pembayaran langsung tampil
   const { data, isLoading } = useQuery({
     queryKey: ['payment-history', page, search],
     queryFn: () => getPaymentHistoryApi({ page, per_page: 15, search }).then(r => r.data),
@@ -22,8 +21,13 @@ export default function PaymentHistory() {
     refetchOnWindowFocus: true,
   });
 
-  const histories = data?.data || [];
-  const meta      = data?.meta || {};
+  // FIX: Backend mengembalikan LengthAwarePaginator langsung di dalam data.
+  // Struktur respons: axios r.data.data = { data: [...], current_page, last_page, ... }
+  // Bukan data.data.data — paginator sudah ada di r.data.data
+  const paginator  = data?.data ?? {};               // objek paginator
+  const histories  = Array.isArray(paginator.data) ? paginator.data : [];
+  const lastPage   = paginator.last_page ?? 1;
+  const currentPage = paginator.current_page ?? page;
 
   return (
     <div className="min-h-screen pb-20 md:pb-0 bg-gray-50 dark:bg-[#0F172A]">
@@ -60,13 +64,17 @@ export default function PaymentHistory() {
             {histories.map(h => (
               <div key={h.id} className="card p-4 flex items-center justify-between gap-4 bg-white dark:bg-[#111827] border border-gray-100 dark:border-gray-800 rounded-xl shadow-sm">
                 <div className="flex-1 min-w-0">
-                  <p className="font-mono text-sm font-semibold text-purple-600 dark:text-purple-400 truncate">{h.booking_code}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">{h.field_name || h.description}</p>
+                  <p className="font-mono text-sm font-semibold text-purple-600 dark:text-purple-400 truncate">
+                    {h.booking?.booking_code ?? h.booking_code ?? '-'}
+                  </p>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-0.5">
+                    {h.booking?.field?.name ?? h.field_name ?? h.description ?? '-'}
+                  </p>
                   <p className="text-xs text-gray-400 mt-0.5">{formatDate(h.created_at)}</p>
                 </div>
                 <div className="text-right shrink-0">
                   <p className="font-bold text-gray-900 dark:text-gray-100">{formatPrice(h.amount)}</p>
-                  <Badge status={h.status} />
+                  <Badge status={h.event ?? h.status} />
                 </div>
               </div>
             ))}
@@ -74,19 +82,21 @@ export default function PaymentHistory() {
         )}
 
         {/* Pagination */}
-        {meta.last_page > 1 && (
+        {lastPage > 1 && (
           <div className="flex items-center justify-center gap-3 mt-6">
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
+              disabled={currentPage === 1}
               className="p-2 rounded-lg border dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
             >
               <ChevronLeft size={16} />
             </button>
-            <span className="text-sm text-gray-500 dark:text-gray-400">Halaman {page} / {meta.last_page}</span>
+            <span className="text-sm text-gray-500 dark:text-gray-400">
+              Halaman {currentPage} / {lastPage}
+            </span>
             <button
-              onClick={() => setPage(p => Math.min(meta.last_page, p + 1))}
-              disabled={page === meta.last_page}
+              onClick={() => setPage(p => Math.min(lastPage, p + 1))}
+              disabled={currentPage === lastPage}
               className="p-2 rounded-lg border dark:border-gray-700 disabled:opacity-40 hover:bg-gray-50 dark:hover:bg-gray-800 transition"
             >
               <ChevronRight size={16} />

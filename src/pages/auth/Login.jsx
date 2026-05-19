@@ -360,15 +360,15 @@ export default function Login() {
       `}</style>
 
       <div className={`login-root${dark ? ' dark-mode' : ''}`}>
-        {/* Theme toggle */}
+        {/* togle */}
         <button onClick={toggle} className="theme-btn" aria-label="Toggle theme">
           {dark ? <Sun size={15} /> : <Moon size={15} />}
         </button>
 
-        {/* ── LEFT PANEL: Illustration ── */}
+        {/* gambar sebelh kiri */}
         <div className="left-panel">
           <div className="hero-image-wrap">
-            <img src="/img/gambar2.png" alt="BokingYuk Sports" />
+            <img src="/img/gambar_kiri.svg" alt="BokingYuk Sports" />
           </div>
         </div>
 

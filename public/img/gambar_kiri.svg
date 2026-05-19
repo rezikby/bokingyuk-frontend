@@ -1,0 +1,137 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 800" width="600" height="800">
+
+  <!-- Background transparent agar menyesuaikan gradient panel -->
+
+  <!-- Decorative top circle -->
+  <circle cx="480" cy="80" r="90" fill="#6366F1" opacity="0.08"/>
+  <circle cx="480" cy="80" r="55" fill="#818CF8" opacity="0.10"/>
+
+  <!-- Decorative bottom circle -->
+  <circle cx="100" cy="720" r="110" fill="#7C3AED" opacity="0.07"/>
+
+  <!-- Small dots decoration -->
+  <circle cx="60" cy="160" r="5" fill="#6366F1" opacity="0.3"/>
+  <circle cx="80" cy="180" r="3" fill="#818CF8" opacity="0.25"/>
+  <circle cx="50" cy="195" r="3" fill="#6366F1" opacity="0.2"/>
+  <circle cx="530" cy="620" r="5" fill="#7C3AED" opacity="0.3"/>
+  <circle cx="550" cy="640" r="3" fill="#6366F1" opacity="0.2"/>
+  <circle cx="520" cy="650" r="4" fill="#818CF8" opacity="0.25"/>
+
+  <!-- ── LAPANGAN (Field) ── -->
+  <!-- Field shadow -->
+  <rect x="68" y="268" width="464" height="304" rx="16" fill="#4338CA" opacity="0.12"/>
+  <!-- Field body -->
+  <rect x="60" y="260" width="464" height="304" rx="16" fill="#16A34A"/>
+  <rect x="72" y="272" width="440" height="280" rx="10" fill="#15803D"/>
+
+  <!-- Field stripes subtle -->
+  <rect x="72" y="272" width="55" height="280" fill="#14783A" rx="0"/>
+  <rect x="182" y="272" width="55" height="280" fill="#14783A" rx="0"/>
+  <rect x="347" y="272" width="55" height="280" fill="#14783A" rx="0"/>
+  <rect x="457" y="272" width="55" height="280" fill="#14783A" rx="0"/>
+
+  <!-- Field border -->
+  <rect x="72" y="272" width="440" height="280" rx="10" fill="none" stroke="white" stroke-width="2.5" opacity="0.7"/>
+
+  <!-- Center line -->
+  <line x1="292" y1="272" x2="292" y2="552" stroke="white" stroke-width="2" opacity="0.65"/>
+
+  <!-- Center circle -->
+  <circle cx="292" cy="412" r="54" fill="none" stroke="white" stroke-width="2" opacity="0.65"/>
+  <circle cx="292" cy="412" r="5" fill="white" opacity="0.7"/>
+
+  <!-- Penalty box left -->
+  <rect x="72" y="352" width="90" height="120" fill="none" stroke="white" stroke-width="1.8" opacity="0.55"/>
+  <!-- Penalty box right -->
+  <rect x="350" y="352" width="162" height="120" fill="none" stroke="white" stroke-width="1.8" opacity="0.55"/>
+
+  <!-- Goal left -->
+  <rect x="44" y="368" width="30" height="88" fill="none" stroke="white" stroke-width="3" rx="3" opacity="0.9"/>
+  <!-- Goal right -->
+  <rect x="510" y="368" width="30" height="88" fill="none" stroke="white" stroke-width="3" rx="3" opacity="0.9"/>
+
+  <!-- ── BALL ── -->
+  <circle cx="340" cy="480" r="22" fill="white"/>
+  <polygon points="340,460 350,468 347,480 333,480 330,468" fill="#1E1B4B" opacity="0.85"/>
+  <circle cx="340" cy="480" r="22" fill="none" stroke="#E5E7EB" stroke-width="1.5"/>
+
+  <!-- ── PLAYER ── -->
+  <!-- Shadow under player -->
+  <ellipse cx="185" cy="558" rx="30" ry="8" fill="#14532D" opacity="0.4"/>
+
+  <!-- Legs -->
+  <rect x="170" y="510" width="13" height="36" fill="#3730A3" rx="4"/>
+  <rect x="191" y="510" width="13" height="36" fill="#3730A3" rx="4"/>
+  <!-- Shoes -->
+  <rect x="164" y="542" width="21" height="10" fill="#1E1B4B" rx="3"/>
+  <rect x="187" y="542" width="21" height="10" fill="#1E1B4B" rx="3"/>
+
+  <!-- Body (jersey) -->
+  <rect x="163" y="464" width="48" height="52" fill="#6366F1" rx="8"/>
+  <!-- Jersey number -->
+  <text x="187" y="497" font-family="Arial Black, sans-serif" font-size="18" font-weight="900" fill="white" text-anchor="middle">7</text>
+
+  <!-- Arms -->
+  <rect x="140" y="468" width="26" height="13" fill="#6366F1" rx="5" transform="rotate(-20 140 475)"/>
+  <rect x="208" y="464" width="28" height="13" fill="#6366F1" rx="5" transform="rotate(25 208 470)"/>
+
+  <!-- Head -->
+  <circle cx="187" cy="450" r="20" fill="#FDDCB5"/>
+  <!-- Hair -->
+  <ellipse cx="187" cy="434" rx="19" ry="11" fill="#2D1B69"/>
+
+  <!-- ── TOP LABEL ── -->
+  <!-- Brand pill -->
+  <rect x="186" y="80" width="132" height="34" rx="17" fill="#6366F1"/>
+  <text x="252" y="102" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="13" font-weight="700" fill="white" text-anchor="middle" letter-spacing="0.5">⚽ BokingYuk</text>
+
+  <!-- Main heading -->
+  <text x="292" y="155" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="34" font-weight="800" fill="#312E81" text-anchor="middle" letter-spacing="-0.5">Sport Arena</text>
+
+  <!-- Subheading -->
+  <text x="292" y="185" font-family="'Plus Jakarta Sans', Arial, sans-serif" font-size="13" font-weight="500" fill="#6366F1" text-anchor="middle" letter-spacing="3">BOOKING LAPANGAN ONLINE</text>
+
+  <!-- Underline accent -->
+  <rect x="232" y="196" width="80" height="3" rx="2" fill="#6366F1"/>
+  <rect x="318" y="196" width="24" height="3" rx="2" fill="#A5B4FC"/>
+
+  <!-- ── BOTTOM TAGS ── -->
+  <rect x="96" y="598" width="90" height="28" rx="14" fill="#6366F1" opacity="0.12"/>
+  <text x="141" y="617" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle" letter-spacing="1">FUTSAL</text>
+
+  <rect x="202" y="598" width="90" height="28" rx="14" fill="#7C3AED" opacity="0.12"/>
+  <text x="247" y="617" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#6D28D9" text-anchor="middle" letter-spacing="1">BASKET</text>
+
+  <rect x="308" y="598" width="110" height="28" rx="14" fill="#6366F1" opacity="0.12"/>
+  <text x="363" y="617" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#4338CA" text-anchor="middle" letter-spacing="1">BADMINTON</text>
+
+  <!-- Available badge -->
+  <rect x="394" y="246" width="96" height="26" rx="13" fill="#16A34A"/>
+  <text x="442" y="263" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="white" text-anchor="middle">✓ Tersedia</text>
+
+  <!-- ── MINI BOOKING CARD ── -->
+  <rect x="324" y="300" width="188" height="130" rx="14" fill="white" opacity="0.96"/>
+  <rect x="324" y="300" width="188" height="10" rx="7" fill="#6366F1"/>
+  <rect x="324" y="306" width="188" height="4" fill="#6366F1"/>
+
+  <text x="418" y="330" font-family="Arial, sans-serif" font-size="11" font-weight="700" fill="#312E81" text-anchor="middle">Lapangan Olahraga</text>
+  <text x="418" y="346" font-family="Arial, sans-serif" font-size="9.5" fill="#6366F1" text-anchor="middle">Sport Arena</text>
+
+  <line x1="338" y1="356" x2="498" y2="356" stroke="#EEF2FF" stroke-width="1.5"/>
+
+  <!-- Time slots -->
+  <rect x="338" y="362" width="44" height="20" rx="6" fill="#6366F1"/>
+  <text x="360" y="376" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="white" text-anchor="middle">08:00</text>
+  <rect x="388" y="362" width="44" height="20" rx="6" fill="#EEF2FF"/>
+  <text x="410" y="376" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#6366F1" text-anchor="middle">12:00</text>
+  <rect x="438" y="362" width="44" height="20" rx="6" fill="#EEF2FF"/>
+  <text x="460" y="376" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="#6366F1" text-anchor="middle">18:00</text>
+
+  <!-- Price -->
+  <text x="338" y="402" font-family="Arial, sans-serif" font-size="10" font-weight="700" fill="#312E81">Rp 120.000 / jam</text>
+
+  <!-- CTA Button -->
+  <rect x="338" y="410" width="174" height="12" rx="6" fill="#6366F1"/>
+  <text x="425" y="420" font-family="Arial, sans-serif" font-size="9" font-weight="700" fill="white" text-anchor="middle">Pesan Sekarang</text>
+
+</svg>
