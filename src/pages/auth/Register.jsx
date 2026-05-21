@@ -13,7 +13,10 @@ import toast from 'react-hot-toast';
 
 const schema = z.object({
   name:                  z.string().min(2, 'Nama minimal 2 karakter'),
-  email:                 z.string().email('Email tidak valid'),
+  email:                 z.string().email('Email tidak valid').refine(
+    (val) => val.toLowerCase().endsWith('@gmail.com'),
+    { message: 'Hanya akun Gmail (@gmail.com) yang diizinkan' }
+  ),
   password:              z.string().min(8, 'Password minimal 8 karakter'),
   password_confirmation: z.string(),
   phone:                 z.string().min(8, 'Nomor telepon tidak valid'),

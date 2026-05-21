@@ -46,9 +46,13 @@ export default function Login() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const access_token = params.get('access_token');
+    const error = params.get('error');
+    const message = params.get('message');
+    window.history.replaceState({}, document.title, '/login');
     if (access_token) {
-      window.history.replaceState({}, document.title, '/login');
       handleGoogleToken(access_token);
+    } else if (error === 'google_failed') {
+      toast.error(message ? decodeURIComponent(message) : 'Login Google gagal');
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
