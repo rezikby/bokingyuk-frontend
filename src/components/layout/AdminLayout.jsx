@@ -202,7 +202,7 @@ function LayoutInner({ children }) {
             <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center">
               <Calendar size={13} className="text-white" />
             </div>
-            BokingYuk Admin
+            Bokingyuk Admin
           </div>
 
           <div className="ml-auto flex items-center gap-1">
