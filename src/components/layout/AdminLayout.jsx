@@ -114,7 +114,7 @@ function LayoutInner({ children }) {
               <div className="w-7 h-7 bg-indigo-600 rounded-lg flex items-center justify-center shrink-0">
                 <Calendar size={14} className="text-white" />
               </div>
-              <span>BokinYuk</span>
+              <span>Bokingyuk</span>
             </Link>
           )}
           {collapsed && (
@@ -202,7 +202,7 @@ function LayoutInner({ children }) {
             <div className="w-6 h-6 bg-indigo-600 rounded-md flex items-center justify-center">
               <Calendar size={13} className="text-white" />
             </div>
-            BokinYuk Admin
+            BokingYuk Admin
           </div>
 
           <div className="ml-auto flex items-center gap-1">

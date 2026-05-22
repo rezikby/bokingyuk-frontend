@@ -40,7 +40,7 @@ export default function Statistics() {
       <div className="space-y-6">
         <div>
           <h1 className="page-title">Statistik Global</h1>
-          <p className="page-subtitle">Overview keseluruhan platform BokinYuk</p>
+          <p className="page-subtitle">Overview keseluruhan platform BokingYuk</p>
         </div>
 
         {/* User stats */}
